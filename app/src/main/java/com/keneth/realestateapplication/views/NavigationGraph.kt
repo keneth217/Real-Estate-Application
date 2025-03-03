@@ -1,0 +1,219 @@
+package com.keneth.realestateapplication.views
+
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.keneth.realestateapplication.data.PropertyType
+import com.keneth.realestateapplication.viewModels.AddPropertyViewModel
+import com.keneth.realestateapplication.viewModels.MultiStepFormViewModel
+import com.keneth.realestateapplication.viewModels.PropertyViewModel
+import com.keneth.realestateapplication.viewModels.UserViewModel
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun NavigationGraph(
+    modifier: Modifier = Modifier,
+    viewModel: PropertyViewModel,
+    viewModelUser: UserViewModel
+) {
+    val navController = rememberNavController()
+    val context = LocalContext.current
+
+    NavHost(
+        navController = navController,
+        startDestination = Screen.Splash.route,
+        modifier = modifier
+    ) {
+        // Splash Screen (outside Scaffold)
+        composable(Screen.Splash.route) {
+            SplashScreen(navController = navController, context)
+        }
+
+        // Authentication Screens
+        composable(Screen.Login.route) {
+            LoginScreen(navController = navController, viewModelUser)
+        }
+//        composable(Screen.SignUp.route) {
+//            SignUpScreen(navController = navController, viewModelUser)
+//        }
+
+        composable(Screen.SignUp.route) {
+
+            val multiStepFormViewModel: MultiStepFormViewModel = viewModel(
+                factory = object : ViewModelProvider.Factory {
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                        return MultiStepFormViewModel(viewModelUser) as T
+                    }
+                }
+            )
+            MultiStepForm(
+                navController = navController,
+                userViewModel = viewModelUser,
+                multiStepFormViewModel = multiStepFormViewModel
+            )
+        }
+
+        composable(Screen.AddProperty.route) {
+            //val propertyViewModel: PropertyViewModel = viewModel()
+            val multiStepPropertyFormViewModel: AddPropertyViewModel = viewModel(
+                factory = object : ViewModelProvider.Factory {
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                        return AddPropertyViewModel(viewModel) as T
+                    }
+                }
+            )
+
+            AddPropertyForm(
+                navController = navController,
+                propertyViewModel = viewModel,
+                multiStepFormPropertyViewModel = multiStepPropertyFormViewModel
+            )
+        }
+        composable(Screen.ForgotPassword.route) {
+            ForgotPasswordScreen(navController = navController, viewModelUser)
+        }
+
+        composable(Screen.PropertyTypes.route) {
+            PropertyTypeScreen(navController = navController, viewModel)
+        }
+
+        // Main App Screens (inside Scaffold)
+        composable(Screen.Dashboard.route) {
+            DashboardScreen(navController = navController, viewModel, viewModelUser)
+        }
+        composable(Screen.PropertyListing.route) {
+            PropertyListingScreen(
+                navController = navController, viewModel,
+            )
+        }
+        composable(
+            route = Screen.PropertyDetails.route,
+            arguments = listOf(navArgument("propertyId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val propertyId = backStackEntry.arguments?.getString("propertyId") ?: ""
+            PropertyDetailsScreen(
+                propertyId = propertyId,
+                navController = navController,
+                viewModel = viewModel
+            )
+        }
+
+        composable(Screen.Favorites.route) {
+            FavoritesScreen(navController = navController, viewModel)
+        }
+        composable(Screen.Notifications.route) {
+            NotificationsScreen(navController = navController)
+        }
+        composable(Screen.Profile.route) {
+            ProfileScreen(navController = navController, viewModelUser)
+        }
+        composable(Screen.Settings.route) {
+            SettingsScreen(navController = navController)
+        }
+
+        // Property Management Screens
+        composable(Screen.PropertyCategories.route) {
+            PropertyCategoriesScreen(navController = navController, viewModel)
+        }
+        composable(
+            route = Screen.PropertyCategoryListing.route,
+            arguments = listOf(navArgument("category") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val category = backStackEntry.arguments?.getString("category") ?: ""
+            PropertyCategoryListingScreen(
+                category = category,
+                navController = navController,
+                viewModel = viewModel
+            )
+        }
+        composable(Screen.MyProperties.route) {
+            MyPropertiesScreen(navController = navController, viewModel)
+        }
+        composable(Screen.PropertyStatus.route) {
+            PropertyStatusScreen(navController = navController, viewModel)
+        }
+
+        // Transaction and Inquiry Screens
+        composable(Screen.Transactions.route) {
+            TransactionsScreen(navController = navController, viewModel)
+        }
+        composable(Screen.Inquiries.route) {
+            InquiriesScreen(navController = navController, viewModel)
+        }
+        composable(Screen.Appointments.route) {
+            AppointmentsScreen(navController = navController, viewModel)
+        }
+
+        // Reports and Analytics
+        composable(Screen.Reports.route) {
+            ReportsScreen(navController = navController, viewModel)
+        }
+        composable(Screen.Analytics.route) {
+            AnalyticsScreen(navController = navController, viewModel)
+        }
+
+        // Miscellaneous Screens
+        composable(Screen.HelpAndSupport.route) {
+            HelpAndSupportScreen(navController = navController)
+        }
+        composable(Screen.AboutUs.route) {
+            AboutUsScreen(navController = navController)
+        }
+        composable(Screen.PrivacyPolicy.route) {
+            PrivacyPolicyScreen(navController = navController)
+        }
+        composable(Screen.TermsAndConditions.route) {
+            TermsAndConditionsScreen(navController = navController)
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
