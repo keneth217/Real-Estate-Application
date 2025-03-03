@@ -84,7 +84,12 @@ fun DashboardScreen(
     val topBarTitle by remember { mutableStateOf("Dashboard") }
     val userDetails = viewModelUser.userProfile.value
     val firstName = viewModelUser.userFirstName.value
-    val displayName by remember { mutableStateOf("User") }
+    val welcome = viewModelUser.userProfile.value
+    var displayName by remember { mutableStateOf("User") }
+
+    if (welcome != null) {
+        displayName = welcome.lastName.uppercase()
+    }
     val currentHour = LocalTime.now().hour
     val greeting = when (currentHour) {
         in 0..11 -> "Good Morning"
@@ -94,6 +99,11 @@ fun DashboardScreen(
     }
 
     println("total $totalProperties")
+    println("total listed $totalListedProperties")
+    println("Username $firstName")
+    if (welcome != null) {
+        println("display ${welcome.lastName}")
+    }
 
     val bottomNavItems = listOf(
         Screen.PropertyListing, Screen.Reports, Screen.Settings
@@ -149,18 +159,17 @@ fun DashboardScreen(
                                         color = Color.White
                                     )
                                 )
-                                Spacer(modifier = Modifier.padding(top = 10.dp))
-                                if (userDetails != null) {
-                                    if (firstName != null) {
-                                        Text(
-                                            text = firstName.uppercase(), style = TextStyle(
-                                                fontSize = 16.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = Color.White
-                                            )
-                                        )
-                                    }
-                                }
+                                Spacer(modifier = Modifier.padding(top = 4.dp))
+
+                                Text(
+                                    text = displayName, style = TextStyle(
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White
+                                    )
+                                )
+
+
                             }
                             Image(
                                 painter = painterResource(id = R.drawable.person),
