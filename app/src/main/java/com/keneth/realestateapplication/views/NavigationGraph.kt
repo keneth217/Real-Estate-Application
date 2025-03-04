@@ -1,5 +1,6 @@
 package com.keneth.realestateapplication.views
 
+import MultiStepFormViewModel
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
@@ -16,7 +17,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.keneth.realestateapplication.data.PropertyType
 import com.keneth.realestateapplication.viewModels.AddPropertyViewModel
-import com.keneth.realestateapplication.viewModels.MultiStepFormViewModel
 import com.keneth.realestateapplication.viewModels.PropertyViewModel
 import com.keneth.realestateapplication.viewModels.UserViewModel
 
@@ -105,7 +105,7 @@ fun NavigationGraph(
             PropertyDetailsScreen(
                 propertyId = propertyId,
                 navController = navController,
-                viewModel = viewModel
+                viewModel,
             )
         }
 
