@@ -16,13 +16,20 @@ data class Property(
     val address: Address = Address(), // Address of the property
     val images: List<String> = emptyList(), // List of image URLs
     val isFeatured: Boolean = false, // Whether the property is featured
-    val isListed:Boolean=false,
+    val isListed: Boolean = false,
     val isSold: Boolean = false, // Whether the property is sold
     val listingDate: Long = 0L, // Listing date in milliseconds (epoch time)
     val updatedDate: Long = 0L, // Last updated date in milliseconds
-    val amenities: List<String> = emptyList(), // List of amenities (e.g., Pool, Gym, Parking)
+    val amenities: Amenities = Amenities(), // List of amenities (e.g., Pool, Gym, Parking)
     val contactInfo: ContactInfo = ContactInfo() // Contact information for the property
 )
+
+data class Amenities(
+    val pool: Boolean = false,
+    val parking: Boolean =false,
+    val gym: Boolean= false,
+
+    )
 
 // Address data class for property location
 data class Address(
@@ -40,7 +47,7 @@ data class ContactInfo(
     val email: String = ""
 )
 
-data class  PropertyType(
+data class PropertyType(
     val uuid: String = "",
     var name: String = "",
 
