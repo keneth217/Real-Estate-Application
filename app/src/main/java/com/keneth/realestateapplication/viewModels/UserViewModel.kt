@@ -1,6 +1,7 @@
 package com.keneth.realestateapplication.viewModels
 
 import android.content.Context
+import android.net.Uri
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -70,11 +71,11 @@ class UserViewModel(
     }
 
     // Sign up a new user
-    fun signUp(email: String, password: String, userData: Map<String, Any>) {
+    fun signUp(email: String, password: String, userData: Map<String, Any>, imageUri: Uri) {
         viewModelScope.launch {
             _authState.value = AuthStatus.Loading
             try {
-                val success = repository.signUp(email, password, userData)
+                val success = repository.signUp(email, password, userData,imageUri)
                 _authState.value =
                     if (success) AuthStatus.Success else AuthStatus.Error("Sign-up failed")
             } catch (e: Exception) {
