@@ -15,40 +15,40 @@ class PropertyRepository(
     private val storage: FirebaseStorage,
     private val auth: FirebaseAuth
 ) {
-    // ✅ Upload a **single image** and return its URL
+    // Upload a single image and return its URL
     suspend fun uploadImage(imageUri: Uri): String? {
         return try {
             val imageRef = storage.reference.child("property_images/${UUID.randomUUID()}.jpg")
-            val uploadTask = imageRef.putFile(imageUri).await()
-            imageRef.downloadUrl.await().toString() // Get download URL
+            imageRef.putFile(imageUri).await()
+            imageRef.downloadUrl.await().toString()
         } catch (e: Exception) {
             println("Error uploading image: ${e.message}")
             null
         }
     }
 
-    // ✅ Upload **multiple images** and return their URLs
+    // Upload multiple images and return their URLs
     suspend fun uploadImages(imageUris: List<Uri>): List<String> {
-        return imageUris.mapNotNull { uploadImage(it) } // Upload each image and collect URLs
+        return imageUris.mapNotNull { uploadImage(it) }
     }
 
-    // ✅ Add a new property **with images**
+    // Add a new property with images
     suspend fun addProperty(property: Property, imageUris: List<Uri>): Boolean {
         return try {
             val userId = auth.currentUser?.uid
             if (userId != null) {
-                val propertyId = UUID.randomUUID().toString() // Unique ID
+                val propertyId = UUID.randomUUID().toString()
 
-                // 🔹 Upload all images and get URLs
+                // Upload images and get URLs
                 val imageUrls = uploadImages(imageUris)
 
-                // 🔹 Create a new Property with image URLs
+                // Create a new Property with image URLs
                 val propertyWithImages = property.copy(
                     uuid = propertyId,
                     images = imageUrls
                 )
 
-                // 🔹 Save the property to Firestore
+                // Save the property to Firestore
                 firestore.collection("properties")
                     .document(propertyId)
                     .set(propertyWithImages)
@@ -64,7 +64,7 @@ class PropertyRepository(
         }
     }
 
-    // ✅ Get all properties from Firestore
+    // Get all properties from Firestore
     suspend fun getAllProperties(): List<Property> {
         return try {
             val snapshot = firestore.collection("properties").get().await()
@@ -74,14 +74,13 @@ class PropertyRepository(
         }
     }
 
-    // ✅ Get all listed properties (not sold)
+    // Get all listed properties (not sold)
     suspend fun listProperties(): List<Property> {
         return try {
             val snapshot = firestore.collection("properties")
                 .whereEqualTo("listed", true)
                 .get()
                 .await()
-
             snapshot.documents.mapNotNull { it.toObject(Property::class.java) }
         } catch (e: Exception) {
             println("Error fetching listed properties: ${e.message}")
@@ -89,7 +88,7 @@ class PropertyRepository(
         }
     }
 
-    // ✅ Get all sold properties
+    // Get all sold properties
     suspend fun listSoldProperties(): List<Property> {
         return try {
             val snapshot = firestore.collection("properties")
@@ -102,23 +101,21 @@ class PropertyRepository(
         }
     }
 
-    // ✅ Get the total number of properties
+    // Get the total number of properties
     suspend fun getTotalProperties(): Int {
         return try {
-            val snapshot = firestore.collection("properties")
-                .get().await()
+            val snapshot = firestore.collection("properties").get().await()
             snapshot.size()
         } catch (e: Exception) {
             0
         }
     }
 
-    // ✅ Get the total number of sold properties
+    // Get the total number of sold properties
     suspend fun getTotalSoldProperties(): Int {
         return try {
             val snapshot = firestore.collection("properties")
                 .whereEqualTo("sold", true)
-                .whereEqualTo("listed", false)
                 .get()
                 .await()
             snapshot.size()
@@ -127,27 +124,24 @@ class PropertyRepository(
         }
     }
 
-    // ✅ Get total sales amount
+    // Get total sales amount
     suspend fun getTotalSalesAmount(): Double {
         return try {
             val snapshot = firestore.collection("properties")
                 .whereEqualTo("sold", true)
-                .whereEqualTo("listed", false)
                 .get()
                 .await()
-
             snapshot.documents.sumOf { it.getDouble("price") ?: 0.0 }
         } catch (e: Exception) {
             0.0
         }
     }
 
-    // ✅ Get total listed properties (not sold)
+    // Get total listed properties (not sold)
     suspend fun getTotalListedProperties(): Int {
         return try {
             val snapshot = firestore.collection("properties")
                 .whereEqualTo("listed", true)
-                .whereEqualTo("sold", false)
                 .get()
                 .await()
             snapshot.size()
@@ -156,15 +150,33 @@ class PropertyRepository(
         }
     }
 
-    // ✅ Add property type
+    // Add property type
     suspend fun addPropertyType(propertyType: PropertyType) {
-        firestore.collection("propertytype").add(propertyType).await()
+        try {
+            firestore.collection("propertytype").add(propertyType).await()
+        } catch (e: Exception) {
+            println("Error adding property type: ${e.message}")
+        }
     }
 
-    // ✅ Get property types
+    // Get property types
     suspend fun getPropertyType(): List<PropertyType> {
-        return firestore.collection("propertytype").get()
-            .await()
-            .toObjects(PropertyType::class.java)
+        return try {
+            firestore.collection("propertytype").get()
+                .await()
+                .toObjects(PropertyType::class.java)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    suspend fun getPropertyById(propertyId: String): Property? {
+        return try {
+            val snapshot = firestore.collection("properties").document(propertyId).get().await()
+            snapshot.toObject(Property::class.java)
+        } catch (e: Exception) {
+            println("Error fetching property by ID: ${e.message}")
+            null
+        }
     }
 }
