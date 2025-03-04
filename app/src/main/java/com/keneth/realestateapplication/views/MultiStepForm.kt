@@ -1,5 +1,8 @@
 package com.keneth.realestateapplication.views
 
+import MultiStepFormViewModel
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,16 +18,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -41,6 +48,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -50,10 +58,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
 import com.keneth.realestateapplication.R
 import com.keneth.realestateapplication.enum.RegistrationStep
 import com.keneth.realestateapplication.viewModels.AuthStatus
-import com.keneth.realestateapplication.viewModels.MultiStepFormViewModel
 import com.keneth.realestateapplication.viewModels.UserViewModel
 import kotlinx.coroutines.delay
 
@@ -61,42 +69,12 @@ import kotlinx.coroutines.delay
 fun MultiStepForm(
     navController: NavController,
     userViewModel: UserViewModel,
-    multiStepFormViewModel: MultiStepFormViewModel = viewModel {
-        MultiStepFormViewModel(
-            userViewModel
-        )
-    }
+    multiStepFormViewModel: MultiStepFormViewModel
 ) {
     val currentStep = multiStepFormViewModel.currentStep
-    val authState = userViewModel.authState.value
-    var showRegistrationMessage by remember { mutableStateOf(false) }
-    var registrationMessage by remember { mutableStateOf("") }
-    var isSuccess by remember { mutableStateOf(false) }
-
-    // Observe the registration state
-    LaunchedEffect(authState) {
-        when (authState) {
-            is AuthStatus.Success -> {
-                showRegistrationMessage = true
-                registrationMessage = "Registration successful!"
-                isSuccess = true
-                // Navigate to login after a delay
-                delay(2000) // 2 seconds delay
-                navController.navigate(Screen.Login.route) {
-                    popUpTo(Screen.SignUp.route) { inclusive = true }
-                }
-            }
-
-            is AuthStatus.Error -> {
-                showRegistrationMessage = true
-                registrationMessage =
-                    (authState as AuthStatus.Error).message ?: "Registration failed."
-                isSuccess = false
-            }
-
-            else -> {}
-        }
-    }
+    val isLoading = multiStepFormViewModel.isLoading
+    val isSuccess = multiStepFormViewModel.isSuccess
+    val errorMessage = multiStepFormViewModel.errorMessage
 
     Scaffold(
         modifier = Modifier
@@ -151,11 +129,13 @@ fun MultiStepForm(
                 RegistrationStep.PERSONAL_DETAILS -> PersonalDetailsStep(multiStepFormViewModel)
                 RegistrationStep.ADDRESS -> AddressStep(multiStepFormViewModel)
                 RegistrationStep.PROFILE_PICTURE -> ProfilePictureStep(multiStepFormViewModel)
-                RegistrationStep.REVIEW -> ReviewStep(multiStepFormViewModel)
+                RegistrationStep.REVIEW -> ReviewStep(
+                    multiStepFormViewModel,
+                    navController = navController
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-
 
             // Navigation buttons
             Row(
@@ -175,19 +155,22 @@ fun MultiStepForm(
                         ),
                         elevation = ButtonDefaults.buttonElevation(
                             defaultElevation = 6.dp,
-                            pressedElevation = 2.dp,
-                            hoveredElevation = 8.dp
+                            pressedElevation = 2.dp
                         )
                     ) {
                         Text("Previous")
                     }
                 }
 
-
-
                 if (currentStep == RegistrationStep.REVIEW) {
                     Button(
-                        onClick = { multiStepFormViewModel.submitForm() },
+                        onClick = {
+                            multiStepFormViewModel.submitForm(
+                                onSuccess = {
+                                    multiStepFormViewModel.isSuccess = true
+                                }
+                            )
+                        },
                         modifier = Modifier
                             .weight(1f)
                             .padding(vertical = 8.dp),
@@ -198,11 +181,18 @@ fun MultiStepForm(
                         ),
                         elevation = ButtonDefaults.buttonElevation(
                             defaultElevation = 6.dp,
-                            pressedElevation = 2.dp,
-                            hoveredElevation = 8.dp
-                        )
+                            pressedElevation = 2.dp
+                        ),
+                        enabled = !isLoading // Disable button while loading
                     ) {
-                        Text("Submit")
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                color = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        } else {
+                            Text("Submit")
+                        }
                     }
                 } else {
                     // Disable "Next" button if required fields are not filled
@@ -211,6 +201,7 @@ fun MultiStepForm(
                         RegistrationStep.PERSONAL_DETAILS -> multiStepFormViewModel.isPersonalDetailsStepValid()
                         else -> true // Enable for optional steps
                     }
+
                     Button(
                         onClick = { multiStepFormViewModel.nextStep() },
                         modifier = Modifier
@@ -223,8 +214,7 @@ fun MultiStepForm(
                         ),
                         elevation = ButtonDefaults.buttonElevation(
                             defaultElevation = 6.dp,
-                            pressedElevation = 2.dp,
-                            hoveredElevation = 8.dp
+                            pressedElevation = 2.dp
                         ),
                         enabled = isNextButtonEnabled
                     ) {
@@ -232,16 +222,18 @@ fun MultiStepForm(
                     }
                 }
             }
+
             if (currentStep == RegistrationStep.EMAIL_PASSWORD) {
-                // Login  Link
+                // Login Link
                 Text(
-                    "Already have an account? Login .",
+                    "Already have an account? Login.",
                     modifier = Modifier.clickable {
                         navController.navigate(Screen.Login.route)
                     },
                     color = MaterialTheme.colorScheme.primary
                 )
             }
+
             // Skip button for optional steps
             if (currentStep == RegistrationStep.ADDRESS || currentStep == RegistrationStep.PROFILE_PICTURE) {
                 Spacer(modifier = Modifier.height(8.dp))
@@ -251,53 +243,8 @@ fun MultiStepForm(
             }
         }
     }
-
-    // Show registration message
-    if (showRegistrationMessage) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.5f)) // Semi-transparent overlay
-                .clickable { showRegistrationMessage = false }, // Dismiss on click outside
-            contentAlignment = Alignment.Center
-        ) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth(0.85f)
-                    .padding(16.dp),
-                shape = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (isSuccess) Color.Green else Color.Red
-                )
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    // Icon (Tick or Cross)
-                    Icon(
-                        imageVector = if (isSuccess) Icons.Default.Check else Icons.Default.Close,
-                        contentDescription = if (isSuccess) "Success" else "Error",
-                        tint = Color.White,
-                        modifier = Modifier.size(48.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Message
-                    Text(
-                        text = registrationMessage,
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-        }
-    }
 }
+
 @Composable
 fun RegistrationProgress(currentStep: RegistrationStep) {
     val progress = when (currentStep) {
@@ -344,7 +291,6 @@ fun EmailPasswordStep(viewModel: MultiStepFormViewModel) {
         )
     }
 }
-
 @Composable
 fun PersonalDetailsStep(viewModel: MultiStepFormViewModel) {
     Column {
@@ -368,7 +314,6 @@ fun PersonalDetailsStep(viewModel: MultiStepFormViewModel) {
         )
     }
 }
-
 @Composable
 fun AddressStep(viewModel: MultiStepFormViewModel) {
     Column(
@@ -405,23 +350,114 @@ fun AddressStep(viewModel: MultiStepFormViewModel) {
         )
     }
 }
-
 @Composable
 fun ProfilePictureStep(viewModel: MultiStepFormViewModel) {
-    // Add logic for uploading a profile picture
-    Text("Upload Profile Picture (Optional)")
-}
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent() // Single selection
+    ) { uri ->
+        if (uri != null) {
+            viewModel.profilePicture = uri // Update ViewModel with selected image
+        }
+    }
 
+    Column(modifier = Modifier.padding(16.dp)) {
+        // Upload Image Button
+        Button(
+            onClick = { launcher.launch("image/*") },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Upload Image")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Display Selected Image
+        viewModel.profilePicture?.let { uri ->
+            Image(
+                painter = rememberAsyncImagePainter(uri),
+                contentDescription = "Selected Image",
+                modifier = Modifier
+                    .size(150.dp)
+                    .clip(RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Crop
+            )
+        } ?: Text(
+            text = "No image selected",
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+            color = Color.Gray
+        )
+    }
+}
 @Composable
-fun ReviewStep(viewModel: MultiStepFormViewModel) {
-    Column {
+
+fun ReviewStep(viewModel: MultiStepFormViewModel, navController: NavController) {
+    val isSuccess = viewModel.isSuccess
+    val isLoading = viewModel.isLoading
+    val errorMessage = viewModel.errorMessage
+
+    // Show success message and navigate to login
+    if (isSuccess) {
+        LaunchedEffect(Unit) {
+            // Delay to show the success message
+            delay(2000) // 2 seconds
+            navController.navigate(Screen.Login.route) {
+                popUpTo(Screen.AddProperty.route) { inclusive = true } // Clear back stack
+            }
+        }
+
+        AlertDialog(
+            onDismissRequest = { /* Do nothing */ },
+            title = { Text("Success") },
+            text = { Text("Registration successful!") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        navController.navigate(Screen.Login.route) {
+                            popUpTo(Screen.AddProperty.route) { inclusive = true }
+                        }
+                    }
+                ) {
+                    Text("OK")
+                }
+            }
+        )
+    }
+
+    // Display user details for review
+    Column(modifier = Modifier.padding(16.dp)) {
         Text("Email: ${viewModel.email}")
         Text("First Name: ${viewModel.firstName}")
         Text("Last Name: ${viewModel.lastName}")
         Text("Phone: ${viewModel.phone}")
-        Text("Address: ${viewModel.address}")
-        if (viewModel.profilePicture != null) {
-            Text("Profile Picture: Uploaded")
+        Text("Address: ${viewModel.address.street}, ${viewModel.address.city}, ${viewModel.address.state}, ${viewModel.address.postalCode}, ${viewModel.address.country}")
+
+        // Submit button
+        Button(
+            onClick = {
+                viewModel.submitForm(
+                    onSuccess = {
+                        // This block will be executed when the registration is successful
+                        viewModel.isSuccess = true // Set success state
+                    }
+                )
+            },
+            enabled = !isLoading
+        ) {
+            if (isLoading) {
+                CircularProgressIndicator(color = Color.White)
+            } else {
+                Text("Submit")
+            }
+        }
+
+        // Show error message
+        if (errorMessage != null) {
+            Text(
+                text = errorMessage,
+                color = Color.Red,
+                modifier = Modifier.padding(top = 8.dp)
+            )
         }
     }
 }
