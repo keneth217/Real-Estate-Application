@@ -5,6 +5,7 @@ enum class AddPropertyStep {
     CONTACT_INFO,
     ADDRESS,
     PROPERTY_TYPE,
+    AMENITIES,
     IMAGES,
     REVIEW
 }
