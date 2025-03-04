@@ -159,9 +159,12 @@ fun ListedPropertyCard(
         modifier = Modifier
             .padding(2.dp)
             .clickable {
-                val propertyId = property.uuid
-                val route = "${Screen.PropertyDetails.route}/$propertyId"
+                val route = Screen.PropertyDetails.createRoute(property.uuid)
                 navController.navigate(route)
+
+                println("Item route we navigating to $route")
+                println("property Id ${property.uuid}")
+
             },
         shape = RoundedCornerShape(8.dp),
         border = BorderStroke(1.dp, Color.LightGray)
@@ -176,37 +179,28 @@ fun ListedPropertyCard(
         ) {
 
 
-//            SubcomposeAsyncImage(
-//                model = property.images.firstOrNull() ?: R.drawable.img_default, // Get first image or default
-//                contentDescription = "Property Image",
-//                contentScale = ContentScale.Crop,
-//                modifier = Modifier
-//                    .size(150.dp)
-//                    .clip(RoundedCornerShape(2.dp)),
-//                loading = {
-//                    Box(
-//                        modifier = Modifier
-//                            .size(100.dp)
-//                            .clip(RoundedCornerShape(4.dp))
-//                            .background(Color.LightGray),
-//                        contentAlignment = Alignment.Center
-//                    ) {
-//                        CircularProgressIndicator(
-//                            modifier = Modifier.size(24.dp),
-//                            color = MaterialTheme.colorScheme.primary
-//                        )
-//                    }
-//                }
-//
-//            )
-
-            Image(
-                painter = rememberAsyncImagePainter(model = property.images.firstOrNull() ?: R.drawable.img_default),
+            SubcomposeAsyncImage(
+                model = property.images.firstOrNull() ?: R.drawable.img_default, // Get first image or default
                 contentDescription = "Property Image",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(150.dp)
-                    .clip(RoundedCornerShape(2.dp))
+                    .clip(RoundedCornerShape(2.dp)),
+                loading = {
+                    Box(
+                        modifier = Modifier
+                            .size(100.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(Color.LightGray),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+
             )
 
             println("images ${property.images}")
