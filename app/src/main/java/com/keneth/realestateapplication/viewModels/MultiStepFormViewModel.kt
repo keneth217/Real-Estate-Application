@@ -1,5 +1,4 @@
-package com.keneth.realestateapplication.viewModels
-
+import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -10,6 +9,8 @@ import com.keneth.realestateapplication.data.USerAddress
 import com.keneth.realestateapplication.data.User
 import com.keneth.realestateapplication.data.UserPreferences
 import com.keneth.realestateapplication.enum.RegistrationStep
+import com.keneth.realestateapplication.viewModels.UserViewModel
+import java.util.UUID
 
 class MultiStepFormViewModel(
     private val userViewModel: UserViewModel // Pass UserViewModel as a dependency
@@ -25,7 +26,7 @@ class MultiStepFormViewModel(
     var lastName by mutableStateOf("")
     var phone by mutableStateOf("")
     var address by mutableStateOf(USerAddress())
-    var profilePicture by mutableStateOf<String?>(null)
+    var profilePicture by mutableStateOf<Uri?>(null)
 
     // Additional fields from the User class
     var userRole by mutableStateOf(RealEstateUserRoles.GUEST)
@@ -36,6 +37,11 @@ class MultiStepFormViewModel(
     var preferences by mutableStateOf(UserPreferences())
     var favorites by mutableStateOf<List<String>>(emptyList())
     var languagePreference by mutableStateOf(LanguagePreference.ENGLISH)
+
+    // State for tracking form submission
+    var isLoading by mutableStateOf(false)
+    var isSuccess by mutableStateOf(false)
+    var errorMessage by mutableStateOf<String?>(null)
 
     // Validation functions
     fun isEmailPasswordStepValid(): Boolean {
@@ -88,29 +94,55 @@ class MultiStepFormViewModel(
     }
 
     // Submit the form
-    fun submitForm() {
-        // Create the User object
-        val user = User(
-            uuid = "", // Generate or fetch UUID as needed
-            firstName = firstName,
-            lastName = lastName,
-            phone = phone,
-            email = email,
-            password = password,
-            userRole = userRole,
-            profileImage = profilePicture ?: "", // Use an empty string if profilePicture is null
-            address = address,
-            isEmailVerified = isEmailVerified,
-            isPhoneVerified = isPhoneVerified,
-            createdAt = createdAt,
-            updatedAt = updatedAt,
-            preferences = preferences,
-            favorites = favorites,
-            languagePreference = languagePreference
-        )
+    fun submitForm(onSuccess: () -> Unit) {
+        if (!validateForm()) {
+            errorMessage = "Please fill out all required fields."
+            return
+        }
 
-        // Call the signUp function in UserViewModel
-        userViewModel.signUp(email, password, user.toMap())
-        println("Registration success $user")
+        isLoading = true
+        errorMessage = null
+
+        try {
+            // Create the User object
+            val user = User(
+                uuid = UUID.randomUUID().toString(), // Generate a unique ID
+                firstName = firstName,
+                lastName = lastName,
+                phone = phone,
+                email = email,
+                password = password,
+                userRole = userRole,
+                profileImage = profilePicture?.toString() ?: "", // Use an empty string if profilePicture is null
+                address = address,
+                isEmailVerified = isEmailVerified,
+                isPhoneVerified = isPhoneVerified,
+                createdAt = createdAt,
+                updatedAt = updatedAt,
+                preferences = preferences,
+                favorites = favorites,
+                languagePreference = languagePreference
+            )
+
+            // Call the signUp function in UserViewModel
+            userViewModel.signUp(email, password, user.toMap(), profilePicture!!)
+            isSuccess = true
+            println("Registration success: $user")
+        } catch (e: Exception) {
+            errorMessage = "Failed to register user: ${e.message}"
+            isSuccess = false
+        } finally {
+            isLoading = false
+        }
+    }
+
+    // Validate the entire form
+    private fun validateForm(): Boolean {
+        return email.isNotBlank() &&
+                password.isNotBlank() &&
+                firstName.isNotBlank() &&
+                lastName.isNotBlank() &&
+                phone.isNotBlank() &&
+                profilePicture != null
     }
 }
