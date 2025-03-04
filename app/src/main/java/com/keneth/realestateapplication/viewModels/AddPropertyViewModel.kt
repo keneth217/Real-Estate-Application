@@ -6,17 +6,18 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.keneth.realestateapplication.data.Address
+import com.keneth.realestateapplication.data.Amenities
 import com.keneth.realestateapplication.data.ContactInfo
 import com.keneth.realestateapplication.data.Property
 import com.keneth.realestateapplication.data.PropertyType
 import com.keneth.realestateapplication.enum.AddPropertyStep
+import kotlinx.coroutines.launch
 import java.util.UUID
-
 class AddPropertyViewModel(
     private val propertyViewModel: PropertyViewModel
 ) : ViewModel() {
-
     // Current step in the form
     var currentStep by mutableStateOf(AddPropertyStep.BASIC_DETAILS)
         private set
@@ -33,7 +34,8 @@ class AddPropertyViewModel(
     var contactInfo by mutableStateOf(ContactInfo())
     var address by mutableStateOf(Address())
     var propertyType by mutableStateOf(PropertyType())
-    var images = mutableStateListOf<Uri>() // Store image URIs for upload
+    var amenities by mutableStateOf(Amenities())
+    var images = mutableStateListOf<Uri>()
 
     // State for tracking form submission
     var isLoading by mutableStateOf(false)
@@ -42,42 +44,50 @@ class AddPropertyViewModel(
 
     // Move to the next step
     fun nextStep() {
-        currentStep = when (currentStep) {
-            AddPropertyStep.BASIC_DETAILS -> AddPropertyStep.CONTACT_INFO
-            AddPropertyStep.CONTACT_INFO -> AddPropertyStep.ADDRESS
-            AddPropertyStep.ADDRESS -> AddPropertyStep.PROPERTY_TYPE
-            AddPropertyStep.PROPERTY_TYPE -> AddPropertyStep.IMAGES
-            AddPropertyStep.IMAGES -> AddPropertyStep.REVIEW
-            AddPropertyStep.REVIEW -> AddPropertyStep.REVIEW // Stay on review step
+        if (validateCurrentStep()) {
+            currentStep = when (currentStep) {
+                AddPropertyStep.BASIC_DETAILS -> AddPropertyStep.CONTACT_INFO
+                AddPropertyStep.CONTACT_INFO -> AddPropertyStep.ADDRESS
+                AddPropertyStep.ADDRESS -> AddPropertyStep.PROPERTY_TYPE
+                AddPropertyStep.PROPERTY_TYPE -> AddPropertyStep.IMAGES
+                AddPropertyStep.IMAGES -> AddPropertyStep.REVIEW
+                AddPropertyStep.REVIEW -> AddPropertyStep.REVIEW
+                AddPropertyStep.AMENITIES -> AddPropertyStep.AMENITIES
+            }
+        } else {
+            errorMessage = "Please fill out all required fields."
         }
     }
 
     // Move to the previous step
     fun previousStep() {
         currentStep = when (currentStep) {
-            AddPropertyStep.BASIC_DETAILS -> AddPropertyStep.BASIC_DETAILS // Stay on first step
+            AddPropertyStep.BASIC_DETAILS -> AddPropertyStep.BASIC_DETAILS
             AddPropertyStep.CONTACT_INFO -> AddPropertyStep.BASIC_DETAILS
             AddPropertyStep.ADDRESS -> AddPropertyStep.CONTACT_INFO
             AddPropertyStep.PROPERTY_TYPE -> AddPropertyStep.ADDRESS
             AddPropertyStep.IMAGES -> AddPropertyStep.PROPERTY_TYPE
             AddPropertyStep.REVIEW -> AddPropertyStep.IMAGES
+            AddPropertyStep.AMENITIES -> AddPropertyStep.AMENITIES
         }
     }
 
-    // Validate the form
-    private fun validateForm(): Boolean {
+    // Validate the current step
+    private fun validateCurrentStep(): Boolean {
         return when (currentStep) {
             AddPropertyStep.BASIC_DETAILS -> title.isNotBlank() && description.isNotBlank() && price > 0
             AddPropertyStep.CONTACT_INFO -> contactInfo.name.isNotBlank() && contactInfo.phone.isNotBlank()
             AddPropertyStep.ADDRESS -> address.street.isNotBlank() && address.city.isNotBlank()
             AddPropertyStep.PROPERTY_TYPE -> propertyType.name.isNotBlank()
             AddPropertyStep.IMAGES -> images.isNotEmpty()
-            AddPropertyStep.REVIEW -> true // All steps are validated
+            AddPropertyStep.AMENITIES -> true
+            AddPropertyStep.REVIEW -> true
+
         }
     }
 
     // Submit the form
-    fun submitForm() {
+    fun submitForm(onSuccess: () -> Unit) {
         if (!validateForm()) {
             errorMessage = "Please fill out all required fields."
             return
@@ -86,33 +96,53 @@ class AddPropertyViewModel(
         isLoading = true
         errorMessage = null
 
-        // Generate a unique ID for the property
-        val propertyId = UUID.randomUUID().toString()
+        viewModelScope.launch {
+            try {
+                val propertyId = UUID.randomUUID().toString()
+                val property = Property(
+                    uuid = propertyId,
+                    title = title,
+                    description = description,
+                    price = price,
+                    currency = currency,
+                    propertyType = propertyType,
+                    bedrooms = bedrooms,
+                    bathrooms = bathrooms,
+                    area = area,
+                    areaUnit = areaUnit,
+                    address = address,
+                    images = emptyList(),
+                    contactInfo = contactInfo,
+                    isFeatured = false,
+                    isSold = false,
+                    isListed = true,
+                    listingDate = System.currentTimeMillis(),
+                    updatedDate = System.currentTimeMillis(),
+                    amenities = amenities
+                )
 
-        // Create the Property object
-        val property = Property(
-            uuid = propertyId,
-            title = title,
-            description = description,
-            price = price,
-            currency = currency,
-            propertyType = propertyType,
-            bedrooms = bedrooms,
-            bathrooms = bathrooms,
-            area = area,
-            areaUnit = areaUnit,
-            address = address,
-            images = emptyList(), // Will be updated after image upload
-            contactInfo = contactInfo,
-            isFeatured = false,
-            isSold = false,
-            isListed = true,
-            listingDate = System.currentTimeMillis(),
-            updatedDate = System.currentTimeMillis(),
-            amenities = emptyList() // Add amenities if needed
-        )
+                propertyViewModel.addProperty(property, images)
+                isSuccess = true
+                onSuccess()
+            } catch (e: Exception) {
+                errorMessage = "Failed to add property: ${e.message}"
+                isSuccess = false
+            } finally {
+                isLoading = false
+            }
+        }
+    }
 
-        // Upload images and add property
-        propertyViewModel.addProperty(property, images)
+    // Validate the entire form
+    private fun validateForm(): Boolean {
+        return title.isNotBlank() &&
+                description.isNotBlank() &&
+                price > 0 &&
+                contactInfo.name.isNotBlank() &&
+                contactInfo.phone.isNotBlank() &&
+                address.street.isNotBlank() &&
+                address.city.isNotBlank() &&
+                propertyType.name.isNotBlank() &&
+                images.isNotEmpty()
     }
 }
