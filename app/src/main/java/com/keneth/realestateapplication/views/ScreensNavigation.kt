@@ -14,9 +14,11 @@ sealed class Screen(
     // Main App Screens
     object Dashboard : Screen("dashboard", "Dashboard")
     object PropertyListing : Screen("propertyListing", "Property Listings")
-    object PropertyDetails : Screen("propertyDetails/{propertyId}", "Property Details") {
+    object PropertyDetails : Screen("propertyDetails/{propertyId}","Property Details") {
         fun createRoute(propertyId: String) = "propertyDetails/$propertyId"
     }
+
+
     object AddProperty : Screen("addProperty", "Add Property")
     object Favorites : Screen("favorites", "Favorites")
     object Notifications : Screen("notifications", "Notifications")
@@ -25,9 +27,11 @@ sealed class Screen(
 
     // Property Management Screens
     object PropertyCategories : Screen("propertyCategories", "Property Categories")
-    object PropertyCategoryListing : Screen("propertyCategoryListing/{category}", "Category Listings") {
+    object PropertyCategoryListing :
+        Screen("propertyCategoryListing/{category}", "Category Listings") {
         fun createRoute(category: String) = "propertyCategoryListing/$category"
     }
+
     object MyProperties : Screen("myProperties", "My Properties")
     object PropertyStatus : Screen("propertyStatus", "Property Status")
     object PropertyTypes : Screen("propertyTypes", "Property Types")
