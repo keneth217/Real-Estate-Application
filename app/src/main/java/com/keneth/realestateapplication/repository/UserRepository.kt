@@ -2,6 +2,8 @@ package com.keneth.realestateapplication.repository
 
 import android.content.ContentValues.TAG
 import android.content.Context
+import android.net.Uri
+import android.service.autofill.UserData
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -11,23 +13,49 @@ import com.google.firebase.storage.FirebaseStorage
 import com.keneth.realestateapplication.UserPreferences
 import com.keneth.realestateapplication.data.User
 import kotlinx.coroutines.tasks.await
+import java.util.UUID
 
 class UserRepository(
     private val firestore: FirebaseFirestore,
     private val storage: FirebaseStorage,
     private val auth: FirebaseAuth
 ) {
+    suspend fun uploadImage(imageUri: Uri): String? {
+        return try {
+            val imageRef = storage.reference.child("users_profiles/${UUID.randomUUID()}.jpg")
+            imageRef.putFile(imageUri).await()
+            imageRef.downloadUrl.await().toString()
+        } catch (e: Exception) {
+            println("Error uploading image: ${e.message}")
+            null
+        }
+    }
 
-    // Sign up a new user with email, password, and additional user data
-    suspend fun signUp(email: String, password: String, userData: Map<String, Any>): Boolean {
+    suspend fun signUp(
+        email: String,
+        password: String,
+        userData: Map<String, Any>,
+        imageUri: Uri
+    ): Boolean {
         return try {
             // Create user with email and password
             val authResult = auth.createUserWithEmailAndPassword(email, password).await()
             val userId = authResult.user?.uid
 
             if (userId != null) {
+                // Upload the profile image and get its URL
+                val imageUrl = uploadImage(imageUri)
+
+                // Add the image URL to the user data
+                val updatedUserData = userData.toMutableMap().apply {
+                    put(
+                        "profileImage",
+                        imageUrl ?: ""
+                    ) // Add the image URL or an empty string if upload fails
+                }
+
                 // Save user data to Firestore
-                firestore.collection("users").document(userId).set(userData).await()
+                firestore.collection("users").document(userId).set(updatedUserData).await()
                 true // Return true if successful
             } else {
                 false // Return false if user creation failed
