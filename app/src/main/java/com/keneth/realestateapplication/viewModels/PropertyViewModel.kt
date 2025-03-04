@@ -18,17 +18,12 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
     private val _propertyLists = mutableStateOf<List<Property>>(emptyList())
     val propertyLists: State<List<Property>> get() = _propertyLists
 
-    // Loading state for all properties
-    private val _isLoadingProperties = mutableStateOf(false)
-    val isLoadingProperties: State<Boolean> get() = _isLoadingProperties
-
-    // State for the list of property categories
     private val _propertyCategoryLists = mutableStateOf<List<PropertyCategory>>(emptyList())
     val propertyCategoryLists: State<List<PropertyCategory>> get() = _propertyCategoryLists
 
-    // Loading state for property categories
-    private val _isLoadingCategories = mutableStateOf(false)
-    val isLoadingCategories: State<Boolean> get() = _isLoadingCategories
+    // Loading state for all properties
+    private val _isLoadingProperties = mutableStateOf(false)
+    val isLoadingProperties: State<Boolean> get() = _isLoadingProperties
 
     // State for the list of listed properties
     private val _listedProperties = mutableStateOf<List<Property>>(emptyList())
@@ -54,6 +49,7 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
     private val _totalListedProperties = mutableIntStateOf(0)
     val totalListedProperties: State<Int> get() = _totalListedProperties
 
+    // State for total sales
     private val _totalSales = mutableDoubleStateOf(0.0)
     val totalSales: State<Double> get() = _totalSales
 
@@ -61,39 +57,49 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
     private val _totalSoldProperties = mutableIntStateOf(0)
     val totalSoldProperties: State<Int> get() = _totalSoldProperties
 
-
+    // State for property types
     private val _propertyTypes = mutableStateOf<List<PropertyType>>(emptyList())
     val propertyTypes: State<List<PropertyType>> get() = _propertyTypes
 
+    // Loading state for property types
     private val _isLoading = mutableStateOf(false)
     val isLoading: State<Boolean> get() = _isLoading
 
+    // Success state for operations
     private val _isSuccess = mutableStateOf(false)
     val isSuccess: State<Boolean> get() = _isSuccess
 
-
+    // Error message state
+    private val _errorMessage = mutableStateOf("")
+    val errorMessage: State<String> get() = _errorMessage
+    private val _propertyDetails = mutableStateOf<Property?>(null)
+    val propertyDetails: State<Property?> get() = _propertyDetails
     init {
-        fetchListedProperties()
         fetchAllProperties()
+        fetchListedProperties()
         fetchSoldProperties()
         fetchPropertyType()
-
     }
 
-    // Add a property
+    // Add a new property
     fun addProperty(property: Property, imageUris: List<Uri>) {
         viewModelScope.launch {
+            _isLoadingProperties.value = true
+            _isSuccess.value = false
+            _errorMessage.value = ""
+
             try {
-                _isLoadingProperties.value = true
-                val success = repository.addProperty(property,imageUris)
+                val success = repository.addProperty(property, imageUris)
                 if (success) {
                     _isSuccess.value = true
-                    fetchAllProperties()
+                    fetchAllProperties() // Refresh the list
+                } else {
+                    _errorMessage.value = "Failed to add property. Please try again."
                 }
-                _isLoadingProperties.value = false
             } catch (e: Exception) {
-                _isSuccess.value = false
-
+                _errorMessage.value = "Error: ${e.message}"
+            } finally {
+                _isLoadingProperties.value = false
             }
         }
     }
@@ -102,31 +108,28 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
     fun fetchAllProperties() {
         viewModelScope.launch {
             _isLoadingProperties.value = true
-            _propertyLists.value = repository.getAllProperties()
-            _totalProperties.intValue = repository.getTotalProperties()
-            _isLoadingProperties.value = false
+            try {
+                _propertyLists.value = repository.getAllProperties()
+                _totalProperties.intValue = repository.getTotalProperties()
+            } catch (e: Exception) {
+                _errorMessage.value = "Error fetching properties: ${e.message}"
+            } finally {
+                _isLoadingProperties.value = false
+            }
         }
     }
 
     // Fetch listed properties
     fun fetchListedProperties() {
         viewModelScope.launch {
-            _isLoadingListedProperties.value = true // Set loading state
+            _isLoadingListedProperties.value = true
             try {
-                // Fetch listed properties from the repository
                 _listedProperties.value = repository.listProperties()
-
-                // Fetch total listed properties (if needed)
-                _totalListedProperties.value = repository.getTotalListedProperties()
-
-                println("Total Listed in ViewModel: ${_listedProperties.value.size}")
-                println("All Listed in ViewModel: ${_listedProperties.value}")
+                _totalListedProperties.intValue = repository.getTotalListedProperties()
             } catch (e: Exception) {
-                // Log the error and update the state
-                println("Error fetching listed properties in ViewModel: ${e.message}")
-                _listedProperties.value = emptyList() // Reset to empty list on error
+                _errorMessage.value = "Error fetching listed properties: ${e.message}"
             } finally {
-                _isLoadingListedProperties.value = false // Reset loading state
+                _isLoadingListedProperties.value = false
             }
         }
     }
@@ -135,24 +138,13 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
     fun fetchSoldProperties() {
         viewModelScope.launch {
             _isLoadingSoldProperties.value = true
-            _soldProperties.value = repository.listSoldProperties()
-            _totalSoldProperties.intValue = repository.getTotalSoldProperties()
-            _isLoadingSoldProperties.value = false
-        }
-    }
-
-    // Add a new property type
-    fun addPropertyType(property: PropertyType) {
-        viewModelScope.launch {
             try {
-                _isLoading.value = true // Show loading state
-                repository.addPropertyType(property) // Add property type
-                fetchPropertyType() // Fetch updated list
+                _soldProperties.value = repository.listSoldProperties()
+                _totalSoldProperties.intValue = repository.getTotalSoldProperties()
             } catch (e: Exception) {
-                // Handle errors (e.g., show a message to the user)
-                println("Error adding property type: ${e.message}")
+                _errorMessage.value = "Error fetching sold properties: ${e.message}"
             } finally {
-                _isLoading.value = false // Hide loading state
+                _isLoadingSoldProperties.value = false
             }
         }
     }
@@ -160,27 +152,56 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
     // Fetch property types
     fun fetchPropertyType() {
         viewModelScope.launch {
+            _isLoading.value = true
             try {
-                _isLoading.value = true
-                _propertyTypes.value =
-                    repository.getPropertyType() // Update state with fetched data
+                _propertyTypes.value = repository.getPropertyType()
             } catch (e: Exception) {
-                // Handle errors (e.g., show a message to the user)
-                println("Error fetching property types: ${e.message}")
+                _errorMessage.value = "Error fetching property types: ${e.message}"
             } finally {
                 _isLoading.value = false
             }
         }
     }
 
+    // Add a new property type
+    fun addPropertyType(propertyType: PropertyType) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                repository.addPropertyType(propertyType)
+                fetchPropertyType() // Refresh the list
+            } catch (e: Exception) {
+                _errorMessage.value = "Error adding property type: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    // Get total sales amount
     fun getTotalSales() {
         viewModelScope.launch {
+            _isLoading.value = true
             try {
-                _isLoading.value = true
-                _totalSales.value=repository.getTotalSalesAmount()
-
-            }catch (e: Exception) {
-                e.message?.let { error(it) }
+                _totalSales.value = repository.getTotalSalesAmount()
+            } catch (e: Exception) {
+                _errorMessage.value = "Error fetching total sales: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+    fun fetchPropertyById(propertyId: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                _propertyDetails.value = repository.getPropertyById(propertyId)
+            } catch (e: Exception) {
+                _errorMessage.value = "Error fetching total sales: ${e.message}"
+                println("Error fetching property details: ${e.message}")
+            }
+            finally {
+                _isLoading.value = false
             }
         }
     }
