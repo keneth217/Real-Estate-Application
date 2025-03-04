@@ -55,12 +55,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.keneth.realestateapplication.data.Amenities
 import com.keneth.realestateapplication.enum.AddPropertyStep
 import com.keneth.realestateapplication.enum.RegistrationStep
 import com.keneth.realestateapplication.viewModels.AddPropertyViewModel
-import com.keneth.realestateapplication.viewModels.MultiStepFormViewModel
 import com.keneth.realestateapplication.viewModels.PropertyViewModel
 import com.keneth.realestateapplication.viewModels.UserViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
@@ -70,20 +71,9 @@ fun AddPropertyForm(
     multiStepFormPropertyViewModel: AddPropertyViewModel
 ) {
     val currentStep = multiStepFormPropertyViewModel.currentStep
-    var showPropertyMessage by remember { mutableStateOf(false) }
-    var propertyMessage by remember { mutableStateOf("") }
-    var isSuccess by remember { mutableStateOf(false) }
     val isLoading = propertyViewModel.isLoading.value
-
-    // Observe the submission status
-    LaunchedEffect(propertyViewModel.isSuccess) {
-        if (propertyViewModel.isSuccess.value) {
-            // Navigate to PropertyListing screen after successful upload
-            navController.navigate(Screen.PropertyListing.route) {
-                popUpTo(Screen.AddProperty.route) { inclusive = true } // Clear back stack
-            }
-        }
-    }
+    val isSuccess = multiStepFormPropertyViewModel.isSuccess
+    val errorMessage = multiStepFormPropertyViewModel.errorMessage
 
     Scaffold(topBar = {
         Screen.AddProperty.title?.let {
@@ -109,6 +99,7 @@ fun AddPropertyForm(
                     AddPropertyStep.ADDRESS -> "Step 3: Address"
                     AddPropertyStep.PROPERTY_TYPE -> "Step 4: Property Type"
                     AddPropertyStep.IMAGES -> "Step 5: Images"
+                    AddPropertyStep.AMENITIES -> "House amenities"
                     AddPropertyStep.REVIEW -> "Step 6: Review & Submit"
                 },
                 style = MaterialTheme.typography.titleMedium,
@@ -128,12 +119,17 @@ fun AddPropertyForm(
                 AddPropertyStep.BASIC_DETAILS -> BasicDetailsStep(multiStepFormPropertyViewModel)
                 AddPropertyStep.CONTACT_INFO -> ContactInfoStep(multiStepFormPropertyViewModel)
                 AddPropertyStep.ADDRESS -> AddressStep(multiStepFormPropertyViewModel)
+                AddPropertyStep.AMENITIES -> AmenitiesStep(multiStepFormPropertyViewModel)
                 AddPropertyStep.PROPERTY_TYPE -> PropertyTypeStep(
                     propertyViewModel = propertyViewModel,
                     addPropertyViewModel = multiStepFormPropertyViewModel
                 )
+
                 AddPropertyStep.IMAGES -> ImagesStep(multiStepFormPropertyViewModel)
-                AddPropertyStep.REVIEW -> ReviewStep(multiStepFormPropertyViewModel)
+                AddPropertyStep.REVIEW -> ReviewStep(
+                    viewModel = multiStepFormPropertyViewModel,
+                    navController = navController
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -159,7 +155,15 @@ fun AddPropertyForm(
 
                 if (currentStep == AddPropertyStep.REVIEW) {
                     Button(
-                        onClick = { multiStepFormPropertyViewModel.submitForm() },
+                        onClick = {
+                            multiStepFormPropertyViewModel.submitForm(
+                                onSuccess = {
+                                    // This block will be executed when the property is successfully added
+                                    multiStepFormPropertyViewModel.isSuccess =
+                                        true // Set success state
+                                }
+                            )
+                        },
                         modifier = Modifier.padding(vertical = 8.dp),
                         shape = RoundedCornerShape(4.dp),
                         colors = ButtonDefaults.buttonColors(
@@ -204,62 +208,32 @@ fun AddPropertyForm(
         }
     }
 
-    // Show success/error message
-    if (showPropertyMessage) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.5f)) // Semi-transparent overlay
-                .clickable { showPropertyMessage = false }, // Dismiss on click outside
-            contentAlignment = Alignment.Center
-        ) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth(0.85f)
-                    .padding(16.dp),
-                shape = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (isSuccess) Color.Green else Color.Red
-                )
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+    // Show error message
+    if (errorMessage != null) {
+        AlertDialog(
+            onDismissRequest = { multiStepFormPropertyViewModel.errorMessage = null },
+            title = { Text("Error") },
+            text = { Text(errorMessage) },
+            confirmButton = {
+                Button(
+                    onClick = { multiStepFormPropertyViewModel.errorMessage = null }
                 ) {
-                    // Icon (Tick or Cross)
-                    Icon(
-                        imageVector = if (isSuccess) Icons.Default.Check else Icons.Default.Close,
-                        contentDescription = if (isSuccess) "Success" else "Error",
-                        tint = Color.White,
-                        modifier = Modifier.size(48.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Message
-                    Text(
-                        text = propertyMessage,
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        textAlign = TextAlign.Center
-                    )
+                    Text("OK")
                 }
             }
-        }
+        )
     }
 }
-
 
 @Composable
 fun PropertyProgress(currentStep: AddPropertyStep) {
     val progress = when (currentStep) {
         AddPropertyStep.BASIC_DETAILS -> 0.0f
         AddPropertyStep.CONTACT_INFO -> 0.3f
-        AddPropertyStep.ADDRESS -> 0.5f
-        AddPropertyStep.PROPERTY_TYPE -> 0.6f
-        AddPropertyStep.IMAGES -> 0.6f
+        AddPropertyStep.ADDRESS -> 0.4f
+        AddPropertyStep.PROPERTY_TYPE -> 0.5f
+        AddPropertyStep.AMENITIES -> 0.6f
+        AddPropertyStep.IMAGES -> 0.8f
         AddPropertyStep.REVIEW -> 1.0f
     }
 
@@ -383,6 +357,36 @@ fun ContactInfoStep(viewModel: AddPropertyViewModel) {
         )
     }
 }
+
+@Composable
+fun AmenitiesStep(viewModel: AddPropertyViewModel) {
+    Column {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Checkbox(
+                checked = viewModel.amenities.gym,
+                onCheckedChange = { viewModel.amenities = viewModel.amenities.copy(gym = it) }
+            )
+            Text("Gym")
+        }
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Checkbox(
+                checked = viewModel.amenities.pool,
+                onCheckedChange = { viewModel.amenities = viewModel.amenities.copy(pool = it) }
+            )
+            Text("Pool")
+        }
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Checkbox(
+                checked = viewModel.amenities.parking,
+                onCheckedChange = { viewModel.amenities = viewModel.amenities.copy(parking = it) }
+            )
+            Text("Parking")
+        }
+    }
+}
+
 
 @Composable
 fun AddressStep(viewModel: AddPropertyViewModel) {
@@ -591,10 +595,45 @@ fun ImagesStep(viewModel: AddPropertyViewModel) {
     }
 }
 
-
 @Composable
-fun ReviewStep(viewModel: AddPropertyViewModel) {
-    Column {
+fun ReviewStep(
+    viewModel: AddPropertyViewModel,
+    navController: NavController
+) {
+    val isSuccess = viewModel.isSuccess
+    val isLoading = viewModel.isLoading
+    val errorMessage = viewModel.errorMessage
+
+    // Show success message and navigate to dashboard
+    if (isSuccess) {
+        LaunchedEffect(Unit) {
+            // Delay to show the success message
+            delay(2000) // 2 seconds
+            navController.navigate(Screen.Dashboard.route) {
+                popUpTo(Screen.AddProperty.route) { inclusive = true } // Clear back stack
+            }
+        }
+
+        AlertDialog(
+            onDismissRequest = { /* Do nothing */ },
+            title = { Text("Success") },
+            text = { Text("Property added successfully!") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        navController.navigate(Screen.Dashboard.route) {
+                            popUpTo(Screen.AddProperty.route) { inclusive = true }
+                        }
+                    }
+                ) {
+                    Text("OK")
+                }
+            }
+        )
+    }
+
+    // Display property details for review
+    Column(modifier = Modifier.padding(16.dp)) {
         Text("Title: ${viewModel.title}")
         Text("Description: ${viewModel.description}")
         Text("Price: ${viewModel.price} ${viewModel.currency}")
@@ -607,5 +646,33 @@ fun ReviewStep(viewModel: AddPropertyViewModel) {
         Text("Address: ${viewModel.address.street}, ${viewModel.address.city}, ${viewModel.address.state}, ${viewModel.address.postalCode}, ${viewModel.address.country}")
         Text("Property Type: ${viewModel.propertyType.name}")
         Text("Images: ${viewModel.images.size} uploaded")
+
+        // Submit button
+        Button(
+            onClick = {
+                viewModel.submitForm(
+                    onSuccess = {
+                        // This block will be executed when the property is successfully added
+                        viewModel.isSuccess = true // Set success state
+                    }
+                )
+            },
+            enabled = !isLoading
+        ) {
+            if (isLoading) {
+                CircularProgressIndicator(color = Color.White)
+            } else {
+                Text("Submit")
+            }
+        }
+
+        // Show error message
+        if (errorMessage != null) {
+            Text(
+                text = errorMessage,
+                color = Color.Red,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+        }
     }
 }
