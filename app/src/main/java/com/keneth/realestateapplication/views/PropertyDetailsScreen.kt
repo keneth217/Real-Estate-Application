@@ -23,6 +23,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -55,7 +57,9 @@ import coil3.compose.rememberAsyncImagePainter
 import com.keneth.realestateapplication.R
 import com.keneth.realestateapplication.data.Address
 import com.keneth.realestateapplication.data.Amenities
+import com.keneth.realestateapplication.data.Appointment
 import com.keneth.realestateapplication.data.ContactInfo
+import com.keneth.realestateapplication.data.Property
 import com.keneth.realestateapplication.data.PropertyType
 import com.keneth.realestateapplication.viewModels.PropertyViewModel
 import androidx.compose.material3.TabRowDefaults as TabRowDefaults1
@@ -66,6 +70,9 @@ fun PropertyDetailsScreen(
     navController: NavController,
     propertyViewModel: PropertyViewModel
 ) {
+    // State for success message
+    var successMessage by remember { mutableStateOf<String?>(null) }
+
     // Fetch property details when the screen is launched
     LaunchedEffect(propertyId) {
         propertyViewModel.fetchPropertyById(propertyId)
@@ -76,7 +83,14 @@ fun PropertyDetailsScreen(
 
     // State for selected tab index
     var selectedTabIndex by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Description", "Amenities", "Contacts", "Address", "Property Type", "Meta")
+    val tabs = listOf(
+        "Basic Details",
+        "Description",
+        "Amenities",
+        "Contacts",
+        "Address",
+        "Property Type"
+    )
 
     // State for tracking the selected image index in the gallery
     var selectedImageIndex by remember { mutableIntStateOf(-1) } // -1 means no image is selected
@@ -101,12 +115,46 @@ fun PropertyDetailsScreen(
         )
     }
 
+    // Show success dialog if there's a success message
+    if (successMessage != null) {
+        AlertDialog(
+            onDismissRequest = { successMessage = null }, // Reset the success message
+            title = { Text("Success") },
+            text = { Text(successMessage!!) },
+            confirmButton = {
+                Button(
+                    onClick = { successMessage = null }
+                ) {
+                    Text("OK")
+                }
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             Screen.PropertyDetails.title?.let {
                 AppTopBar(
                     title = it,
                     onMenuClick = { navController.popBackStack() }
+                )
+            }
+        }, bottomBar = {
+            if (property != null) {
+                PropertyActionsBottomBar(
+                    property = property,
+                    onListProperty = {
+                        propertyViewModel.listProperty(propertyId)
+                        successMessage = "Property listed successfully!"
+                    },
+                    onMakeAppointment = { appointmentDetails ->
+                        propertyViewModel.makeAppointment(propertyId, appointmentDetails)
+                        successMessage = "Appointment created successfully!"
+                    },
+                    onSellProperty = {
+                        propertyViewModel.sellProperty(propertyId)
+                        successMessage = "Property marked as sold!"
+                    }
                 )
             }
         }
@@ -195,6 +243,7 @@ fun PropertyDetailsScreen(
                         .padding(vertical = 8.dp)
                 ) {
                     when (tabs[selectedTabIndex]) {
+                        "Basic Details" -> BasicDetailsTab(property)
                         "Description" -> DescriptionTab(property.description)
                         "Amenities" -> AmenitiesTab(property.amenities)
                         "Contacts" -> ContactsTab(property.contactInfo)
@@ -214,7 +263,49 @@ fun PropertyDetailsScreen(
         }
     }
 }
+@Composable
+fun PropertyActionsBottomBar(
+    property: Property,
+    onListProperty: () -> Unit,
+    onMakeAppointment: (Appointment) -> Unit,
+    onSellProperty: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        if (!property.isListed) {
+            Button(
+                onClick = onListProperty,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("List Property")
+            }
+        }
 
+        Button(
+            onClick = {
+                // Open a dialog or screen to collect appointment details
+                val appointmentDetails = Appointment(
+                )
+                onMakeAppointment(appointmentDetails)
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Make Appointment")
+        }
+
+        if (!property.isSold) {
+            Button(
+                onClick = onSellProperty,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Mark as Sold")
+            }
+        }
+    }
+}
 @Composable
 fun ImageDialog(
     images: List<String>,
@@ -277,6 +368,17 @@ fun ImageDialog(
         }
     }
 }
+@Composable
+fun BasicDetailsTab(property: Property) {
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text("Title: ${property.title}", style = MaterialTheme.typography.bodyMedium)
+        Text("Price: ${property.price}", style = MaterialTheme.typography.bodyMedium)
+        Text("Size: ${property.area}", style = MaterialTheme.typography.bodyMedium)
+        Text("Bathrooms: ${property.bathrooms}", style = MaterialTheme.typography.bodyMedium)
+        Text("Bedrooms: ${property.bedrooms}", style = MaterialTheme.typography.bodyMedium)
+
+    }
+}
 
 @Composable
 fun ContactsTab(contactInfo: ContactInfo) {
@@ -324,4 +426,23 @@ fun AmenitiesTab(amenities: Amenities) {
         Text("Parking: ${amenities.parking}", style = MaterialTheme.typography.bodyMedium)
         Text("Gym: ${amenities.gym}", style = MaterialTheme.typography.bodyMedium)
     }
+}
+
+@Composable
+fun SuccessDialog(
+    message: String,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Success") },
+        text = { Text(message) },
+        confirmButton = {
+            Button(
+                onClick = onDismiss
+            ) {
+                Text("OK")
+            }
+        }
+    )
 }

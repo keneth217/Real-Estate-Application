@@ -50,9 +50,10 @@ class AddPropertyViewModel(
                 AddPropertyStep.CONTACT_INFO -> AddPropertyStep.ADDRESS
                 AddPropertyStep.ADDRESS -> AddPropertyStep.PROPERTY_TYPE
                 AddPropertyStep.PROPERTY_TYPE -> AddPropertyStep.IMAGES
+                AddPropertyStep.AMENITIES -> AddPropertyStep.AMENITIES
                 AddPropertyStep.IMAGES -> AddPropertyStep.REVIEW
                 AddPropertyStep.REVIEW -> AddPropertyStep.REVIEW
-                AddPropertyStep.AMENITIES -> AddPropertyStep.AMENITIES
+
             }
         } else {
             errorMessage = "Please fill out all required fields."
