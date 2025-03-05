@@ -8,7 +8,7 @@ data class Property(
     val description: String = "", // Detailed description of the property
     val price: Double = 0.0, // Price of the property
     val currency: String = "USD", // Currency (e.g., USD, EUR, GBP)
-    val propertyType: PropertyType = PropertyType(), // Type of property (e.g., Apartment, House, Villa,one bedroom,tow,thrree,bedroom)
+    val propertyType: PropertyType = PropertyType(), // Type of property (e.g., Apartment, House, Villa,one bedroom,tow,three,bedroom)
     val bedrooms: Int = 0, // Number of bedrooms
     val bathrooms: Int = 0, // Number of bathrooms
     val area: Double = 0.0, // Area of the property in square meters/feet
@@ -21,13 +21,14 @@ data class Property(
     val listingDate: Long = 0L, // Listing date in milliseconds (epoch time)
     val updatedDate: Long = 0L, // Last updated date in milliseconds
     val amenities: Amenities = Amenities(), // List of amenities (e.g., Pool, Gym, Parking)
-    val contactInfo: ContactInfo = ContactInfo() // Contact information for the property
+    val contactInfo: ContactInfo = ContactInfo() ,// Contact information for the property
+    val appointments: List<Appointment> = emptyList() // List of appointments
 )
 
 data class Amenities(
     val pool: Boolean = false,
-    val parking: Boolean =false,
-    val gym: Boolean= false,
+    val parking: Boolean = false,
+    val gym: Boolean = false,
 
     )
 
