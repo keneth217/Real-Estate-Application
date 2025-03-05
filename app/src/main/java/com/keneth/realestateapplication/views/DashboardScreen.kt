@@ -1,5 +1,6 @@
 package com.keneth.realestateapplication.views
 
+import TotalsPieChart
 import androidx.compose.material3.Card
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
@@ -53,11 +54,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.*
 import androidx.compose.ui.unit.*
+import co.yml.charts.ui.barchart.models.BarChartData
 import com.keneth.realestateapplication.R
 import com.keneth.realestateapplication.data.User
 
 import kotlinx.coroutines.launch
-
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -66,8 +67,6 @@ fun DashboardScreen(
     viewModel: PropertyViewModel,
     viewModelUser: UserViewModel
 ) {
-
-
     val scope = rememberCoroutineScope()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val currentRoute = navController.currentBackStackEntry?.destination?.route
@@ -168,12 +167,9 @@ fun DashboardScreen(
                                         color = Color.White
                                     )
                                 )
-
-
                             }
                             Image(
                                 painter = painterResource(id = R.drawable.person),
-
                                 contentDescription = "Profile Image",
                                 modifier = Modifier
                                     .size(50.dp)
@@ -185,29 +181,47 @@ fun DashboardScreen(
                                 colorFilter = ColorFilter.tint(Color.White)
                             )
                         }
-                    }
 
-                    // Dashboard metrics
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .offset(y = 50.dp)
-                    ) {
-                        Row(
+                        // Card for total sales
+                        Spacer(modifier = Modifier.padding(top = 16.dp))
+                        Card(
                             modifier = Modifier
-                                .fillMaxWidth(),
-
-                            horizontalArrangement = Arrangement.SpaceEvenly
+                                .fillMaxWidth()
+                                .height(80.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
                         ) {
-                            DashboardCard("Total ", totalProperties)
-                            DashboardCard("Listed ", totalListedProperties)
-                            DashboardCard("Sold ", totalSoldProperties)
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "Total Sales: $${viewModel.getTotalSales()}",
+                                    fontSize = 22.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Black
+                                )
+                            }
                         }
                     }
                 }
 
+                Text(
+                    text = "Properties Statistics",
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
+
+                // Bar chart for totals
+                TotalsPieChart(
+                    totalProperties = totalProperties,
+                    totalListedProperties = totalListedProperties,
+                    totalSoldProperties = totalSoldProperties
+                )
+
                 // Property Categories
-                Column(modifier = Modifier.padding(top = 30.dp, start = 20.dp)) {
+                Column(modifier = Modifier.padding(top = 16.dp, start = 20.dp)) {
                     Text("Property Categories", fontSize = 22.sp, fontWeight = FontWeight.Bold)
 
                     if (propertyCategoryLists.isEmpty()) {
@@ -278,4 +292,3 @@ fun CategoryCard(name: String, onClick: () -> Unit) {
         }
     }
 }
-
