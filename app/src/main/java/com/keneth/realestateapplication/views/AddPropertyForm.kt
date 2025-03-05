@@ -119,13 +119,14 @@ fun AddPropertyForm(
                 AddPropertyStep.BASIC_DETAILS -> BasicDetailsStep(multiStepFormPropertyViewModel)
                 AddPropertyStep.CONTACT_INFO -> ContactInfoStep(multiStepFormPropertyViewModel)
                 AddPropertyStep.ADDRESS -> AddressStep(multiStepFormPropertyViewModel)
-                AddPropertyStep.AMENITIES -> AmenitiesStep(multiStepFormPropertyViewModel)
+
                 AddPropertyStep.PROPERTY_TYPE -> PropertyTypeStep(
                     propertyViewModel = propertyViewModel,
                     addPropertyViewModel = multiStepFormPropertyViewModel
                 )
 
                 AddPropertyStep.IMAGES -> ImagesStep(multiStepFormPropertyViewModel)
+                AddPropertyStep.AMENITIES -> AmenitiesStep(multiStepFormPropertyViewModel)
                 AddPropertyStep.REVIEW -> ReviewStep(
                     viewModel = multiStepFormPropertyViewModel,
                     navController = navController
@@ -386,8 +387,6 @@ fun AmenitiesStep(viewModel: AddPropertyViewModel) {
         }
     }
 }
-
-
 @Composable
 fun AddressStep(viewModel: AddPropertyViewModel) {
     Column {
@@ -423,7 +422,6 @@ fun AddressStep(viewModel: AddPropertyViewModel) {
         )
     }
 }
-
 @Composable
 fun PropertyTypeStep(
     propertyViewModel: PropertyViewModel,
