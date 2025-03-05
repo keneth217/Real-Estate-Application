@@ -7,6 +7,8 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.keneth.realestateapplication.data.Appointment
 import com.keneth.realestateapplication.data.Property
 import com.keneth.realestateapplication.data.PropertyCategory
 import com.keneth.realestateapplication.data.PropertyType
@@ -74,6 +76,8 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
     val errorMessage: State<String> get() = _errorMessage
     private val _propertyDetails = mutableStateOf<Property?>(null)
     val propertyDetails: State<Property?> get() = _propertyDetails
+    private val _appointmentsDetails = mutableStateOf<List<Appointment>>(emptyList())
+    val appointmentsDetails: State<List<Appointment>> get() = _appointmentsDetails
     init {
         fetchAllProperties()
         fetchListedProperties()
@@ -177,7 +181,6 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
             }
         }
     }
-
     // Get total sales amount
     fun getTotalSales() {
         viewModelScope.launch {
@@ -199,11 +202,57 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
             } catch (e: Exception) {
                 _errorMessage.value = "Error fetching total sales: ${e.message}"
                 println("Error fetching property details: ${e.message}")
-            }
-            finally {
+            } finally {
                 _isLoading.value = false
             }
         }
     }
+    fun makeAppointment(propertyId: String, appointmentDetails: Appointment) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                // Call the repository function to make an appointment
+                repository.makeAppointment(propertyId, appointmentDetails)
+                // Optionally, fetch the updated property details
+                val updatedProperty = repository.getPropertyById(propertyId)
+                _appointmentsDetails.value = updatedProperty?.appointments!!
+            } catch (e: Exception) {
+                _errorMessage.value = "Error making appointment: ${e.message}"
+                println("Error making appointment: ${e.message}")
+            } finally {
+                _isLoading.value = false // Reset loading state
+            }
+        }
+    }
+    fun listProperty(propertyId:String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                repository.listProperty(propertyId)
+                fetchPropertyById(propertyId)
+            } catch (e: Exception) {
 
+            } finally {
+
+            }
+        }
+
+    }
+    fun sellProperty(propertyId: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                // Call the repository function to sell the property
+                repository.sellProperty(propertyId)
+                // Optionally, fetch the updated property details
+                val updatedProperty = repository.getPropertyById(propertyId)
+                _propertyDetails.value = updatedProperty
+            } catch (e: Exception) {
+                _errorMessage.value = "Error selling property: ${e.message}"
+                println("Error selling property: ${e.message}")
+            } finally {
+                _isLoading.value = false // Reset loading state
+            }
+        }
+    }
 }
