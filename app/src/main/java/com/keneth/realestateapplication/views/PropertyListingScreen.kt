@@ -37,6 +37,7 @@ import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
@@ -68,37 +69,43 @@ import com.keneth.realestateapplication.viewModels.UserViewModel
 import java.text.NumberFormat
 import java.util.Locale
 
-
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun PropertyListingScreen(
     navController: NavController,
     propertyViewModel: PropertyViewModel,
-
-    ) {
-    //val propertyLists =propertyViewModel.propertyLists.value
+) {
+    // Fetch listed properties and other data
     val listedProperties = propertyViewModel.listedProperties.value
     val totalListed = propertyViewModel.totalListedProperties.value
     val isLoading = propertyViewModel.isLoadingListedProperties.value
-    //val totalSales=propertyViewModel.totalSales.value
-    val topBarTitle = "Property Listing ($totalListed)"
+    val totalSales = propertyViewModel.getTotalSales()
 
+
+    // State for search query
+    var searchQuery by remember { mutableStateOf("") }
 
     // Fetch listed properties when the screen is launched
     LaunchedEffect(Unit) {
         propertyViewModel.fetchListedProperties()
     }
-    // println("all properties $propertyLists")
-    println("Listing screen")
-    println("listed properties $listedProperties")
-    println("total listed properties $totalListed")
-    // println("total sales properties $totalSales")
+
+    // Filter properties based on search query
+    val filteredProperties = listedProperties.filter { property ->
+        property.title.contains(searchQuery, ignoreCase = true) ||
+                property.description.contains(searchQuery, ignoreCase = true) ||
+                property.address.street.contains(searchQuery, ignoreCase = true) ||
+                property.address.city.contains(searchQuery, ignoreCase = true)
+    }
+
     Scaffold(
         topBar = {
-            AppTopBar(
-                title = topBarTitle,
-                onMenuClick = { navController.popBackStack() }
-            )
+            Screen.PropertyListing.title?.let {
+                AppTopBar(
+                    title = it+"$totalListed",
+                    onMenuClick = { navController.popBackStack() }
+                )
+            }
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
@@ -116,31 +123,59 @@ fun PropertyListingScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
+            // Search bar
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                label = { Text("Search for property") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            )
+
+            // Display properties or loading/error states
             Column(modifier = Modifier.padding(4.dp)) {
-
                 if (isLoading) {
-
+                    // Show loading indicator
                     Column(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        CircularProgressIndicator(
-                           // modifier = Modifier.size(30.dp),
+                        CircularProgressIndicator()
+                    }
+                } else if (listedProperties.isEmpty()) {
+                    // Show message if no properties are listed
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ){
+                        Text(
+                            "No properties listed for sale!",
+                            modifier = Modifier.padding(16.dp)
                         )
                     }
 
+                } else if (searchQuery.isNotEmpty() && filteredProperties.isEmpty()) {
+                    // Show message if no properties match the search query
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ){
+                        Text(
+                            "No properties found for : '$searchQuery'!",
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
 
-                } else if (listedProperties.isEmpty()) {
-                    Text(
-                        "No properties listed for Sale !",
-                        modifier = Modifier.padding(16.dp)
-                    )
                 } else {
+                    // Display filtered properties
                     LazyColumn(
                         contentPadding = PaddingValues(16.dp)
                     ) {
-                        items(listedProperties) { property ->
+                        items(filteredProperties) { property ->
                             ListedPropertyCard(property, navController)
                         }
                     }
@@ -149,6 +184,7 @@ fun PropertyListingScreen(
         }
     }
 }
+
 
 @Composable
 fun ListedPropertyCard(
