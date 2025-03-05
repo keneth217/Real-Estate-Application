@@ -4,6 +4,7 @@ import android.net.Uri
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+import com.keneth.realestateapplication.data.Appointment
 import com.keneth.realestateapplication.data.Property
 import com.keneth.realestateapplication.data.PropertyType
 import com.keneth.realestateapplication.data.User
@@ -15,6 +16,8 @@ class PropertyRepository(
     private val storage: FirebaseStorage,
     private val auth: FirebaseAuth
 ) {
+
+    private val PROPERTIES_COLLECTION = "properties"
     // Upload a single image and return its URL
     suspend fun uploadImage(imageUri: Uri): String? {
         return try {
@@ -26,12 +29,10 @@ class PropertyRepository(
             null
         }
     }
-
     // Upload multiple images and return their URLs
     suspend fun uploadImages(imageUris: List<Uri>): List<String> {
         return imageUris.mapNotNull { uploadImage(it) }
     }
-
     // Add a new property with images
     suspend fun addProperty(property: Property, imageUris: List<Uri>): Boolean {
         return try {
@@ -63,7 +64,6 @@ class PropertyRepository(
             false // Failure
         }
     }
-
     // Get all properties from Firestore
     suspend fun getAllProperties(): List<Property> {
         return try {
@@ -73,7 +73,6 @@ class PropertyRepository(
             emptyList()
         }
     }
-
     // Get all listed properties (not sold)
     suspend fun listProperties(): List<Property> {
         return try {
@@ -87,7 +86,6 @@ class PropertyRepository(
             emptyList()
         }
     }
-
     // Get all sold properties
     suspend fun listSoldProperties(): List<Property> {
         return try {
@@ -100,7 +98,6 @@ class PropertyRepository(
             emptyList()
         }
     }
-
     // Get the total number of properties
     suspend fun getTotalProperties(): Int {
         return try {
@@ -110,7 +107,6 @@ class PropertyRepository(
             0
         }
     }
-
     // Get the total number of sold properties
     suspend fun getTotalSoldProperties(): Int {
         return try {
@@ -123,7 +119,6 @@ class PropertyRepository(
             0
         }
     }
-
     // Get total sales amount
     suspend fun getTotalSalesAmount(): Double {
         return try {
@@ -136,7 +131,6 @@ class PropertyRepository(
             0.0
         }
     }
-
     // Get total listed properties (not sold)
     suspend fun getTotalListedProperties(): Int {
         return try {
@@ -149,7 +143,6 @@ class PropertyRepository(
             0
         }
     }
-
     // Add property type
     suspend fun addPropertyType(propertyType: PropertyType) {
         try {
@@ -158,7 +151,6 @@ class PropertyRepository(
             println("Error adding property type: ${e.message}")
         }
     }
-
     // Get property types
     suspend fun getPropertyType(): List<PropertyType> {
         return try {
@@ -179,4 +171,37 @@ class PropertyRepository(
             null
         }
     }
+    suspend fun makeAppointment(propertyId: String, appointmentDetails: Appointment) {
+        val property = getPropertyById(propertyId)
+        if (property != null) {
+            // Use the `plus` function to combine lists
+            val updatedAppointments = property.appointments + appointmentDetails
+
+            // Update the Firestore document
+            firestore.collection(PROPERTIES_COLLECTION)
+                .document(propertyId)
+                .update("appointments", updatedAppointments)
+                .await()
+        }
+    }
+    // List a property (set listed = true)
+    suspend fun listProperty(propertyId: String) {
+        firestore.collection(PROPERTIES_COLLECTION)
+            .document(propertyId)
+            .update("listed", true)
+            .await()
+    }
+    // Mark a property as sold
+    suspend fun sellProperty(propertyId: String) {
+        val updates = mapOf(
+            "sold" to true, // Mark the property as sold
+            "listed" to false // Mark the property as unlisted
+        )
+
+        firestore.collection(PROPERTIES_COLLECTION)
+            .document(propertyId)
+            .update(updates)
+            .await()
+    }
+
 }
