@@ -14,7 +14,7 @@ android {
 
     defaultConfig {
         applicationId = "com.keneth.realestateapplication"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -44,6 +44,11 @@ android {
 }
 
 dependencies {
+
+    //charts
+    implementation("co.yml:ycharts:2.1.0")
+
+ //   implementation("com.github.tehras:charts:0.2.4-alpha")
     //firebase
     // implementation(platform("com.google.firebase:firebase-bom:32.6.0"))
     implementation("com.google.firebase:firebase-auth")
