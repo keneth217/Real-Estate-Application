@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.sp
 import co.yml.charts.common.model.PlotType
 import co.yml.charts.ui.piechart.charts.PieChart
 
@@ -41,11 +42,15 @@ fun TotalsPieChart(totalProperties: Int, totalListedProperties: Int, totalSoldPr
     // Create PieChartConfig
     val pieChartConfig = PieChartConfig(
         isAnimationEnable = true, // Enable animation
-       // chartPadding = 20.dp, // Padding around the chart
+        chartPadding = 20, // Padding around the chart
         labelVisible = true, // Show labels on slices
-        backgroundColor = Color.White, // Background color of the chart
+        backgroundColor = Color.LightGray, // Background color of the chart
         strokeWidth = 100f, // Width of the slices
-        labelColor = Color.Black // Color of the labels
+        labelColor = Color.Black ,// Color of the labels
+        isClickOnSliceEnabled = true,
+        labelFontSize = 24.sp,
+        labelType = PieChartConfig.LabelType.PERCENTAGE,
+        isSumVisible = true,
     )
 
     // Display the pie chart
