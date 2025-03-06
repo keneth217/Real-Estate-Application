@@ -59,6 +59,7 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(innerPadding),
                         viewModel = propertyViewModel,
                         viewModelUser = userViewModel,
+                        context = this
                     )
                 }
             }
