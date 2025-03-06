@@ -13,6 +13,8 @@ import com.keneth.realestateapplication.data.Property
 import com.keneth.realestateapplication.data.PropertyCategory
 import com.keneth.realestateapplication.data.PropertyType
 import com.keneth.realestateapplication.repository.PropertyRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class PropertyViewModel(private val repository: PropertyRepository) : ViewModel() {
@@ -52,8 +54,9 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
     val totalListedProperties: State<Int> get() = _totalListedProperties
 
     // State for total sales
+
     private val _totalSales = mutableDoubleStateOf(0.0)
-    val totalSales: State<Double> get() = _totalSales
+    val totalSales: State<Double> = _totalSales
 
     // State for total sold properties
     private val _totalSoldProperties = mutableIntStateOf(0)
@@ -85,6 +88,8 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
         fetchPropertyType()
     }
 
+
+
     // Add a new property
     fun addProperty(property: Property, imageUris: List<Uri>) {
         viewModelScope.launch {
@@ -107,7 +112,6 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
             }
         }
     }
-
     // Fetch all properties
     fun fetchAllProperties() {
         viewModelScope.launch {
@@ -122,7 +126,6 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
             }
         }
     }
-
     // Fetch listed properties
     fun fetchListedProperties() {
         viewModelScope.launch {
@@ -137,7 +140,6 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
             }
         }
     }
-
     // Fetch sold properties
     fun fetchSoldProperties() {
         viewModelScope.launch {
@@ -152,7 +154,6 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
             }
         }
     }
-
     // Fetch property types
     fun fetchPropertyType() {
         viewModelScope.launch {
@@ -166,7 +167,6 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
             }
         }
     }
-
     // Add a new property type
     fun addPropertyType(propertyType: PropertyType) {
         viewModelScope.launch {
@@ -182,11 +182,12 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
         }
     }
     // Get total sales amount
-    fun getTotalSales() {
+    fun fetchTotalSales() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                _totalSales.value = repository.getTotalSalesAmount()
+                val sales = repository.getTotalSalesAmount()
+                _totalSales.value = sales
             } catch (e: Exception) {
                 _errorMessage.value = "Error fetching total sales: ${e.message}"
             } finally {
