@@ -139,24 +139,6 @@ fun PropertyDetailsScreen(
                     onMenuClick = { navController.popBackStack() }
                 )
             }
-        }, bottomBar = {
-            if (property != null) {
-                PropertyActionsBottomBar(
-                    property = property,
-                    onListProperty = {
-                        propertyViewModel.listProperty(propertyId)
-                        successMessage = "Property listed successfully!"
-                    },
-                    onMakeAppointment = { appointmentDetails ->
-                        propertyViewModel.makeAppointment(propertyId, appointmentDetails)
-                        successMessage = "Appointment created successfully!"
-                    },
-                    onSellProperty = {
-                        propertyViewModel.sellProperty(propertyId)
-                        successMessage = "Property marked as sold!"
-                    }
-                )
-            }
         }
     ) { paddingValues ->
         if (property != null) {
@@ -220,6 +202,48 @@ fun PropertyDetailsScreen(
                     }
                 }
 
+                // Action Buttons (List Property, Make Appointment, Mark as Sold)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (!property.isListed) {
+                        Button(
+                            onClick = {
+                                // Navigate to the "List Property" screen
+                                navController.navigate(Screen.ListPropertyScreen.createRoute(propertyId))
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("List Property")
+                        }
+                    }
+
+                    Button(
+                        onClick = {
+                            // Navigate to the "Make Appointment" screen
+                            navController.navigate(Screen.MakeAppointmentScreen.createRoute(propertyId))
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Make Appointment")
+                    }
+
+                    if (!property.isSold) {
+                        Button(
+                            onClick = {
+                                // Navigate to the "Mark as Sold" screen
+                                navController.navigate(Screen.SellPropertyScreen.createRoute(propertyId))
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Mark as Sold")
+                        }
+                    }
+                }
+
                 // Scrollable Tabs
                 ScrollableTabRow(
                     selectedTabIndex = selectedTabIndex,
@@ -259,49 +283,6 @@ fun PropertyDetailsScreen(
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator()
-            }
-        }
-    }
-}
-@Composable
-fun PropertyActionsBottomBar(
-    property: Property,
-    onListProperty: () -> Unit,
-    onMakeAppointment: (Appointment) -> Unit,
-    onSellProperty: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-    ) {
-        if (!property.isListed) {
-            Button(
-                onClick = onListProperty,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("List Property")
-            }
-        }
-
-        Button(
-            onClick = {
-                // Open a dialog or screen to collect appointment details
-                val appointmentDetails = Appointment(
-                )
-                onMakeAppointment(appointmentDetails)
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Make Appointment")
-        }
-
-        if (!property.isSold) {
-            Button(
-                onClick = onSellProperty,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Mark as Sold")
             }
         }
     }
