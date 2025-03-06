@@ -1,6 +1,8 @@
 package com.keneth.realestateapplication.views
 
 import MultiStepFormViewModel
+import MyPropertiesScreen
+import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
@@ -25,7 +27,8 @@ import com.keneth.realestateapplication.viewModels.UserViewModel
 fun NavigationGraph(
     modifier: Modifier = Modifier,
     viewModel: PropertyViewModel,
-    viewModelUser: UserViewModel
+    viewModelUser: UserViewModel,
+    context: Context
 ) {
     val navController = rememberNavController()
     val context = LocalContext.current
@@ -90,7 +93,7 @@ fun NavigationGraph(
 
         // Main App Screens (inside Scaffold)
         composable(Screen.Dashboard.route) {
-            DashboardScreen(navController = navController, viewModel, viewModelUser)
+            DashboardScreen(navController = navController, viewModel, viewModelUser,context)
         }
         composable(Screen.PropertyListing.route) {
             PropertyListingScreen(
@@ -175,6 +178,40 @@ fun NavigationGraph(
         }
         composable(Screen.TermsAndConditions.route) {
             TermsAndConditionsScreen(navController = navController)
+        }
+
+        composable(
+            route = Screen.MakeAppointmentScreen.route,
+            arguments = listOf(navArgument("propertyId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val propertyId = backStackEntry.arguments?.getString("propertyId") ?: ""
+            MakeAppointmentScreen(
+                propertyId = propertyId,
+                navController = navController,
+                viewModel,
+            )
+        }
+        composable(
+            route = Screen.SellPropertyScreen.route,
+            arguments = listOf(navArgument("propertyId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val propertyId = backStackEntry.arguments?.getString("propertyId") ?: ""
+            SellPropertyScreen(
+                propertyId = propertyId,
+                navController = navController,
+                viewModel,
+            )
+        }
+        composable(
+            route = Screen.ListPropertyScreen.route,
+            arguments = listOf(navArgument("propertyId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val propertyId = backStackEntry.arguments?.getString("propertyId") ?: ""
+            ListPropertyScreen(
+                propertyId = propertyId,
+                navController = navController,
+                viewModel,
+            )
         }
     }
 }
