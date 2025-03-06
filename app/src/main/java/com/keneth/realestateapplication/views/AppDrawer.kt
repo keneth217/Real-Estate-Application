@@ -56,6 +56,7 @@ fun AppDrawer(
         Screen.PropertyTypes,
         Screen.Settings,
         Screen.Reports,
+        Screen.MyProperties,
 
 
     )
