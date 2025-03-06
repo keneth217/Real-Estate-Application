@@ -1,6 +1,7 @@
 package com.keneth.realestateapplication.views
 
 import TotalsPieChart
+import android.content.Context
 import androidx.compose.material3.Card
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
@@ -10,20 +11,13 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.ripple
-import androidx.compose.material.ripple.createRippleModifierNode
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -31,32 +25,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.time.LocalTime
-import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.*
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.*
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.*
-import androidx.compose.ui.text.font.*
-import androidx.compose.ui.unit.*
-import co.yml.charts.ui.barchart.models.BarChartData
-import com.keneth.realestateapplication.R
-import com.keneth.realestateapplication.data.User
 
 import kotlinx.coroutines.launch
 
@@ -65,7 +39,8 @@ import kotlinx.coroutines.launch
 fun DashboardScreen(
     navController: NavController,
     viewModel: PropertyViewModel,
-    viewModelUser: UserViewModel
+    viewModelUser: UserViewModel,
+    context: Context
 ) {
     val scope = rememberCoroutineScope()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -85,7 +60,7 @@ fun DashboardScreen(
     val firstName = viewModelUser.userFirstName.value
     val welcome = viewModelUser.userProfile.value
     var displayName by remember { mutableStateOf("User") }
-
+  //  val profileImage: String = viewModelUser.userProfile.value?.profileImage ?: ""
     if (welcome != null) {
         displayName = welcome.lastName.uppercase()
     }
@@ -96,7 +71,21 @@ fun DashboardScreen(
         in 16..20 -> "Good Evening"
         else -> "Good Night"
     }
+    // Fetch data from ViewModel
+    val totalSales by viewModel.totalSales
+    val userProfile by viewModelUser.userProfile
 
+    val profilePicture by viewModelUser.userProfile
+    val profileImage = viewModelUser.userProfile.value?.profileImage ?: ""
+    LaunchedEffect(Unit) {
+        viewModel.fetchTotalSales()
+        viewModel.fetchSoldProperties()
+        viewModel.fetchAllProperties()
+        viewModel.fetchListedProperties()
+        viewModelUser.fetchUserProfile()
+    }
+    println("user profile image: $profileImage")
+    println("Total Sales  $totalSales")
     println("total $totalProperties")
     println("total listed $totalListedProperties")
     println("Username $firstName")
@@ -128,115 +117,141 @@ fun DashboardScreen(
                     navController.navigate(bottomNavItems[index].route)
                 })
         }) { paddingValues ->
-            Column(
+            LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
             ) {
                 // Green header with user greeting
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                        .background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(Color(0xFF03F603), Color(0xFF7AF198))
-                            ), shape = RoundedCornerShape(bottomStart = 10.dp, bottomEnd = 10.dp)
-                        )
-                ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column {
-                                Text(
-                                    text = "$greeting ,", style = TextStyle(
-                                        fontSize = 20.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White
-                                    )
-                                )
-                                Spacer(modifier = Modifier.padding(top = 4.dp))
-
-                                Text(
-                                    text = displayName, style = TextStyle(
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White
-                                    )
-                                )
-                            }
-                            Image(
-                                painter = painterResource(id = R.drawable.person),
-                                contentDescription = "Profile Image",
-                                modifier = Modifier
-                                    .size(50.dp)
-                                    .clip(CircleShape)
-                                    .border(2.dp, Color.White, CircleShape)
-                                    .clickable {
-                                        navController.navigate(Screen.Profile.route)
-                                    },
-                                colorFilter = ColorFilter.tint(Color.White)
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .background(
+                                brush = Brush.verticalGradient(
+                                    colors = listOf(Color(0xFF03F603), Color(0xFF7AF198))
+                                ),
+                                shape = RoundedCornerShape(bottomStart = 10.dp, bottomEnd = 10.dp)
                             )
-                        }
-
-                        // Card for total sales
-                        Spacer(modifier = Modifier.padding(top = 16.dp))
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(80.dp),
-                            shape = RoundedCornerShape(8.dp),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
+                    ) {
+                        Column(modifier = Modifier.padding(20.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text(
-                                    text = "Total Sales: $${viewModel.getTotalSales()}",
-                                    fontSize = 22.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.Black
+                                Column {
+                                    Text(
+                                        text = "$greeting ,", style = TextStyle(
+                                            fontSize = 20.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White
+                                        )
+                                    )
+                                    Spacer(modifier = Modifier.padding(top = 4.dp))
+
+                                    Text(
+                                        text = displayName, style = TextStyle(
+                                            fontSize = 16.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White
+                                        )
+                                    )
+                                }
+
+                                ProfilePicture(
+                                    profilePicture = profileImage,
+                                    profileImage = profileImage.toString(),
+                                    modifier = Modifier
+                                        .size(100.dp)
+                                        .clip(CircleShape),
+                                  navController =navController
                                 )
+//                                Image(
+//                                    painter = painterResource(id = R.drawable.person),
+//                                    contentDescription = "Profile Image",
+//                                    modifier = Modifier
+//                                        .size(50.dp)
+//                                        .clip(CircleShape)
+//                                        .border(2.dp, Color.White, CircleShape)
+//                                        .clickable {
+//                                            navController.navigate(Screen.Profile.route)
+//                                        },
+//                                    colorFilter = ColorFilter.tint(Color.White)
+//                                )
+                            }
+
+                            // Card for total sales
+                            Spacer(modifier = Modifier.padding(top = 16.dp))
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(80.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "Total Sales: $totalSales",
+                                        fontSize = 22.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.Black
+                                    )
+                                }
                             }
                         }
                     }
                 }
 
-                Text(
-                    text = "Properties Statistics",
-                    fontSize = 26.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
+                // Properties Statistics
+                item {
+                    Text(
+                        text = "Properties Statistics",
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
 
                 // Bar chart for totals
-                TotalsPieChart(
-                    totalProperties = totalProperties,
-                    totalListedProperties = totalListedProperties,
-                    totalSoldProperties = totalSoldProperties
-                )
+                item {
+                    TotalsPieChart(
+                        totalProperties = totalProperties,
+                        totalListedProperties = totalListedProperties,
+                        totalSoldProperties = totalSoldProperties,
+                        context = context
+                    )
+                }
 
                 // Property Categories
-                Column(modifier = Modifier.padding(top = 16.dp, start = 20.dp)) {
-                    Text("Property Categories", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-
-                    if (propertyCategoryLists.isEmpty()) {
+                item {
+                    Column(modifier = Modifier.padding(top = 16.dp, start = 20.dp)) {
                         Text(
-                            "No categories found. Add a new category!",
+                            text = "Property Categories",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(16.dp)
                         )
-                    } else {
-                        LazyVerticalGrid(
-                            GridCells.Fixed(2),
-                            contentPadding = PaddingValues(16.dp)
-                        ) {
-                            items(propertyCategoryLists) { category ->
-                                CategoryCard(category.category) {
-                                    navController.navigate("${Screen.PropertyCategories.route}/${category.uuid}")
+
+                        if (propertyCategoryLists.isEmpty()) {
+                            Text(
+                                text = "No categories found. Add a new category!",
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        } else {
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(2),
+                                contentPadding = PaddingValues(16.dp)
+                            ) {
+                                items(propertyCategoryLists) { category ->
+                                    CategoryCard(category.category) {
+                                        navController.navigate("${Screen.PropertyCategories.route}/${category.uuid}")
+                                    }
                                 }
                             }
                         }
