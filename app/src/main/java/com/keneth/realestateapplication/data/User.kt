@@ -28,7 +28,7 @@ data class User(
             "password" to password,
             "userRole" to userRole.name,
             "profileImage" to profileImage,
-            "address" to mapOf(
+            "add                                          ress" to mapOf(
                 "street" to address.street,
                 "city" to address.city,
                 "state" to address.state,
