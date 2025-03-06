@@ -79,7 +79,7 @@ fun PropertyListingScreen(
     val listedProperties = propertyViewModel.listedProperties.value
     val totalListed = propertyViewModel.totalListedProperties.value
     val isLoading = propertyViewModel.isLoadingListedProperties.value
-    val totalSales = propertyViewModel.getTotalSales()
+    val totalSales = propertyViewModel.fetchTotalSales()
 
 
     // State for search query
