@@ -106,6 +106,8 @@ fun ProfileScreen(
                     )
 
                     // Profile Image
+
+                    println("user profile image in profile page :${user.profileImage}")
                     Image(
                         painter = painterResource(id = R.drawable.person),
 
