@@ -14,7 +14,7 @@ sealed class Screen(
     // Main App Screens
     object Dashboard : Screen("dashboard", "Dashboard")
     object PropertyListing : Screen("propertyListing", "Property Listings")
-    object PropertyDetails : Screen("propertyDetails/{propertyId}","Property Details") {
+    object PropertyDetails : Screen("propertyDetails/{propertyId}", "Property Details") {
         fun createRoute(propertyId: String) = "propertyDetails/$propertyId"
     }
 
@@ -50,4 +50,15 @@ sealed class Screen(
     object AboutUs : Screen("aboutUs", "About Us")
     object PrivacyPolicy : Screen("privacyPolicy", "Privacy Policy")
     object TermsAndConditions : Screen("termsAndConditions", "Terms & Conditions")
+
+    object ListPropertyScreen : Screen("listProperty/{propertyId}", "List Property") {
+        fun createRoute(propertyId: String) = "listProperty/$propertyId"
+    }
+    object MakeAppointmentScreen : Screen("makeAppointment/{propertyId}", "Make Appointment") {
+        fun createRoute(propertyId: String) = "makeAppointment/$propertyId"
+    }
+    object SellPropertyScreen : Screen("sellProperty/{propertyId}", "Sell Property") {
+        fun createRoute(propertyId: String) = "sellProperty/$propertyId"
+    }
+
 }
