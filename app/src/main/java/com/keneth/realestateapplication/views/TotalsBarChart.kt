@@ -1,3 +1,5 @@
+package com.keneth.realestateapplication.views
+
 import android.content.Context
 import android.graphics.Typeface
 import android.text.TextUtils
@@ -25,68 +27,62 @@ fun TotalsPieChart(
     totalSoldProperties: Int,
     context: Context
 ) {
-    // Prepare chart data
     val slices = listOf(
         PieChartData.Slice(
             label = "Total",
-            value = totalProperties.toFloat(), // Value for the slice
-            color = Color(0xFF4CAF50) // Green color for the slice
+            value = totalProperties.toFloat(),
+            color = Color(0xFF15EE1D)
         ),
         PieChartData.Slice(
             label = "Listed",
-            value = totalListedProperties.toFloat(), // Value for the slice
-            color = Color(0xFF2196F3) // Blue color for the slice
+            value = totalListedProperties.toFloat(),
+            color = Color(0xFF2196F3)
         ),
         PieChartData.Slice(
             label = "Sold",
-            value = totalSoldProperties.toFloat(), // Value for the slice
-            color = Color(0xFFF44336) // Red color for the slice
+            value = totalSoldProperties.toFloat(),
+            color = Color(0xFFF44336)
         )
     )
 
-    // Create PieChartData
     val pieChartData = PieChartData(
-        slices = slices, // Slice data
-        plotType = PlotType.Pie // Type of chart (Pie or Donut)
+        slices = slices,
+        plotType = PlotType.Pie
     )
 
-    // Create PieChartConfig
     val pieChartConfig = PieChartConfig(
-        isAnimationEnable = true, // Enable animation
-        chartPadding = 20, // Padding around the chart
-        labelVisible = true, // Show labels on slices
-        backgroundColor = Color.White, // Background color of the chart
-        strokeWidth = 120f, // Width of the slices
-        labelColor = Color.Black, // Color of the labels
-        isClickOnSliceEnabled = true, // Enable click on slices
-        labelFontSize = 16.sp, // Font size for labels
-        labelType = PieChartConfig.LabelType.PERCENTAGE, // Show percentage labels
-        isSumVisible = true, // Show the sum of all slices
-        activeSliceAlpha = 0.9f, // Alpha for active slices
-        isEllipsizeEnabled = true, // Enable ellipsize for long labels
-        sliceLabelEllipsizeAt = TextUtils.TruncateAt.MIDDLE, // Ellipsize at the middle
-        sliceLabelTypeface = Typeface.defaultFromStyle(Typeface.ITALIC), // Italic labels
-        showSliceLabels = true // Show slice labels
+        isAnimationEnable = true,
+        chartPadding = 10,
+        labelVisible = true,
+       // backgroundColor = Color.White,
+        strokeWidth = 20f,
+        labelColor = Color.Black,
+        isClickOnSliceEnabled = true,
+        labelFontSize = 12.sp,
+        labelType = PieChartConfig.LabelType.PERCENTAGE,
+        isSumVisible = true,
+        activeSliceAlpha = 0.5f,
+        isEllipsizeEnabled = true,
+        sliceLabelEllipsizeAt = TextUtils.TruncateAt.MIDDLE,
+        sliceLabelTypeface = Typeface.defaultFromStyle(Typeface.ITALIC),
+        showSliceLabels = true
     )
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .height(400.dp)
-            .padding(8.dp)
+            .height(500.dp)
+            .padding(2.dp)
     ) {
-        // Display legends
         Legends(legendsConfig = DataUtils.getLegendsConfigFromPieChartData(pieChartData, 3))
 
-        // Display the pie chart
         PieChart(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(400.dp),
-            pieChartData = pieChartData, // Pie chart data
-            pieChartConfig = pieChartConfig // Pie chart configuration
+            pieChartData = pieChartData,
+            pieChartConfig = pieChartConfig
         ) { slice ->
-            // Show a toast when a slice is clicked
             Toast.makeText(context, slice.label, Toast.LENGTH_SHORT).show()
         }
     }
