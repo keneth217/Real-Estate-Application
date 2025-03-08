@@ -81,6 +81,21 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
     val propertyDetails: State<Property?> get() = _propertyDetails
     private val _appointmentsDetails = mutableStateOf<List<Appointment>>(emptyList())
     val appointmentsDetails: State<List<Appointment>> get() = _appointmentsDetails
+
+    private val _successMessage = mutableStateOf<String?>(null)
+    val successMessage: State<String?> get() = _successMessage
+
+    private val _appointments = mutableStateOf<List<Appointment>>(emptyList())
+    val appointments: State<List<Appointment>> get() = _appointments
+    private val _allAppointments = mutableStateOf<List<Appointment>>(emptyList())
+    val allAppointments: State<List<Appointment>> get() = _allAppointments
+
+    private val _userAppointments = mutableStateOf<List<Appointment>>(emptyList())
+    val userAppointments: State<List<Appointment>> get() = _userAppointments
+
+    private val _propertyAppointments = mutableStateOf<List<Appointment>>(emptyList())
+    val propertyAppointments: State<List<Appointment>> get() = _propertyAppointments
+
     init {
         fetchAllProperties()
         fetchListedProperties()
@@ -208,20 +223,24 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
             }
         }
     }
-    fun makeAppointment(propertyId: String, appointmentDetails: Appointment) {
+
+    fun makeAppointment(
+        propertyId: String,
+        appointment: Appointment,
+        onResult: (Boolean, String?) -> Unit // Callback for success/failure
+    ) {
         viewModelScope.launch {
-            _isLoading.value = true
             try {
                 // Call the repository function to make an appointment
-                repository.makeAppointment(propertyId, appointmentDetails)
-                // Optionally, fetch the updated property details
-                val updatedProperty = repository.getPropertyById(propertyId)
-                _appointmentsDetails.value = updatedProperty?.appointments!!
+                repository.makeAppointment(propertyId, appointment) { success, message ->
+                    if (success) {
+                        onResult(true, "Appointment scheduled successfully!")
+                    } else {
+                        onResult(false, message)
+                    }
+                }
             } catch (e: Exception) {
-                _errorMessage.value = "Error making appointment: ${e.message}"
-                println("Error making appointment: ${e.message}")
-            } finally {
-                _isLoading.value = false // Reset loading state
+                onResult(false, "Error making appointment: ${e.message}")
             }
         }
     }
@@ -253,6 +272,52 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
                 println("Error selling property: ${e.message}")
             } finally {
                 _isLoading.value = false // Reset loading state
+            }
+        }
+    }
+
+
+
+
+
+    fun fetchAllAppointments() {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val appointments = repository.fetchAllAppointments()
+                _allAppointments.value = appointments
+            } catch (e: Exception) {
+                _errorMessage.value = "Failed to fetch appointments: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun fetchAppointmentsForUser(userId: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val appointments = repository.fetchAppointmentsForUser(userId)
+                _userAppointments.value = appointments
+            } catch (e: Exception) {
+                _errorMessage.value = "Failed to fetch user appointments: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun fetchAppointmentsForProperty(propertyId: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val appointments = repository.fetchAppointmentsForProperty(propertyId)
+                _propertyAppointments.value = appointments
+            } catch (e: Exception) {
+                _errorMessage.value = "Failed to fetch property appointments: ${e.message}"
+            } finally {
+                _isLoading.value = false
             }
         }
     }
