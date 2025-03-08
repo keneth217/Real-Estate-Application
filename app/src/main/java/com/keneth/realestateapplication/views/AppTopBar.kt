@@ -17,30 +17,45 @@ import androidx.compose.ui.unit.sp
 import com.keneth.realestateapplication.R
 
 @Composable
-fun AppTopBar(title: String, onMenuClick: () -> Unit) {
-
+fun AppTopBar(
+    title: String,
+    onMenuClick: () -> Unit,
+    backgroundColor: Color = Color(0xFF12F11B) // Default background color (green)
+) {
     val toBarFontFamily = FontFamily(
         Font(R.font.chalk_talk, weight = FontWeight.Normal),
         Font(R.font.seagram_tfb, weight = FontWeight.Bold)
     )
-    TopAppBar(
-        title = { Text(text = title,
-            style = TextStyle(
-                fontSize = 16.sp,
-                fontFamily = toBarFontFamily,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
 
-            ) },
+    TopAppBar(
+        title = {
+            Text(
+                text = title,
+                style = TextStyle(
+                    fontSize = 16.sp,
+                    fontFamily = toBarFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            )
+        },
         navigationIcon = {
             IconButton(onClick = onMenuClick) {
                 if (title.equals("dashboard", ignoreCase = true)) {
-                    Icon(imageVector = Icons.Default.Menu, contentDescription = "Menu")
+                    Icon(
+                        imageVector = Icons.Default.Menu,
+                        contentDescription = "Menu",
+                        tint = Color.White // Set icon color to white
+                    )
                 } else {
-                    Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color.White // Set icon color to white
+                    )
                 }
             }
-        }
+        },
+        backgroundColor = backgroundColor // Set the background color of the TopAppBar
     )
 }
