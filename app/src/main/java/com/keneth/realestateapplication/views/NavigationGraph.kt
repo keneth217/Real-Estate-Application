@@ -22,7 +22,6 @@ import com.keneth.realestateapplication.viewModels.AddPropertyViewModel
 import com.keneth.realestateapplication.viewModels.PropertyViewModel
 import com.keneth.realestateapplication.viewModels.UserViewModel
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NavigationGraph(
     modifier: Modifier = Modifier,
@@ -93,7 +92,7 @@ fun NavigationGraph(
 
         // Main App Screens (inside Scaffold)
         composable(Screen.Dashboard.route) {
-            DashboardScreen(navController = navController, viewModel, viewModelUser,context)
+            DashboardScreen(navController = navController, viewModel, viewModelUser, context)
         }
         composable(Screen.PropertyListing.route) {
             PropertyListingScreen(
@@ -154,8 +153,15 @@ fun NavigationGraph(
         composable(Screen.Inquiries.route) {
             InquiriesScreen(navController = navController, viewModel)
         }
-        composable(Screen.Appointments.route) {
-            AppointmentsScreen(navController = navController, viewModel)
+        composable(Screen.Appointments.route) { backStackEntry ->
+            val propertyId = backStackEntry.arguments?.getString("propertyId")
+            val userId = backStackEntry.arguments?.getString("userId")
+            AppointmentsScreen(
+                navController = navController,
+                viewModel = viewModel,
+                propertyId = propertyId,
+                userId = userId
+            )
         }
 
         // Reports and Analytics
@@ -185,11 +191,14 @@ fun NavigationGraph(
             arguments = listOf(navArgument("propertyId") { type = NavType.StringType })
         ) { backStackEntry ->
             val propertyId = backStackEntry.arguments?.getString("propertyId") ?: ""
-            MakeAppointmentScreen(
-                propertyId = propertyId,
-                navController = navController,
-                viewModel,
-            )
+            viewModelUser.userProfile.value?.let {
+                MakeAppointmentScreen(
+                    propertyId = propertyId,
+                    navController = navController,
+                    viewModel,
+                    userId = it.uuid,
+                )
+            }
         }
         composable(
             route = Screen.SellPropertyScreen.route,
