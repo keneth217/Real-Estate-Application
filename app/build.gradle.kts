@@ -45,6 +45,10 @@ android {
 
 dependencies {
 
+    //date picker
+    implementation ("androidx.compose.material3:material3:1.1.1") // For DatePicker and TimePicker
+    implementation ("androidx.compose.material3:material3-window-size-class:1.1.1") // Optional
+
     //charts
     implementation("co.yml:ycharts:2.1.0")
 
