@@ -16,8 +16,9 @@ class PropertyRepository(
     private val storage: FirebaseStorage,
     private val auth: FirebaseAuth
 ) {
-
+    private val appointmentsCollection = firestore.collection("appointments")
     private val PROPERTIES_COLLECTION = "properties"
+    private val propertiesCollection = firestore.collection("properties")
     // Upload a single image and return its URL
     suspend fun uploadImage(imageUri: Uri): String? {
         return try {
@@ -29,10 +30,12 @@ class PropertyRepository(
             null
         }
     }
+
     // Upload multiple images and return their URLs
     suspend fun uploadImages(imageUris: List<Uri>): List<String> {
         return imageUris.mapNotNull { uploadImage(it) }
     }
+
     // Add a new property with images
     suspend fun addProperty(property: Property, imageUris: List<Uri>): Boolean {
         return try {
@@ -64,6 +67,7 @@ class PropertyRepository(
             false // Failure
         }
     }
+
     // Get all properties from Firestore
     suspend fun getAllProperties(): List<Property> {
         return try {
@@ -73,6 +77,7 @@ class PropertyRepository(
             emptyList()
         }
     }
+
     // Get all listed properties (not sold)
     suspend fun listProperties(): List<Property> {
         return try {
@@ -86,6 +91,7 @@ class PropertyRepository(
             emptyList()
         }
     }
+
     // Get all sold properties
     suspend fun listSoldProperties(): List<Property> {
         return try {
@@ -98,6 +104,7 @@ class PropertyRepository(
             emptyList()
         }
     }
+
     // Get the total number of properties
     suspend fun getTotalProperties(): Int {
         return try {
@@ -107,6 +114,7 @@ class PropertyRepository(
             0
         }
     }
+
     // Get the total number of sold properties
     suspend fun getTotalSoldProperties(): Int {
         return try {
@@ -119,6 +127,7 @@ class PropertyRepository(
             0
         }
     }
+
     // Get total sales amount
     suspend fun getTotalSalesAmount(): Double {
         return try {
@@ -131,6 +140,7 @@ class PropertyRepository(
             0.0
         }
     }
+
     // Get total listed properties (not sold)
     suspend fun getTotalListedProperties(): Int {
         return try {
@@ -143,6 +153,7 @@ class PropertyRepository(
             0
         }
     }
+
     // Add property type
     suspend fun addPropertyType(propertyType: PropertyType) {
         try {
@@ -151,6 +162,7 @@ class PropertyRepository(
             println("Error adding property type: ${e.message}")
         }
     }
+
     // Get property types
     suspend fun getPropertyType(): List<PropertyType> {
         return try {
@@ -171,19 +183,37 @@ class PropertyRepository(
             null
         }
     }
-    suspend fun makeAppointment(propertyId: String, appointmentDetails: Appointment) {
-        val property = getPropertyById(propertyId)
-        if (property != null) {
-            // Use the `plus` function to combine lists
-            val updatedAppointments = property.appointments + appointmentDetails
 
-            // Update the Firestore document
-            firestore.collection(PROPERTIES_COLLECTION)
-                .document(propertyId)
-                .update("appointments", updatedAppointments)
-                .await()
+    suspend fun makeAppointment(
+        propertyId: String,
+        appointment: Appointment, // Pass the appointment object
+        onResult: (Boolean, String?) -> Unit // Callback for success/failure
+    ) {
+        try {
+            // Fetch the property details
+            val property = getPropertyById(propertyId)
+            if (property != null) {
+                // Use the `plus` function to combine lists
+                val updatedAppointments = property.appointments + appointment
+
+                // Update the Firestore document
+                propertiesCollection
+                    .document(propertyId)
+                    .update("appointments", updatedAppointments) // Update the appointments field
+                    .await()
+
+                // Call the callback with success
+                onResult(true, "Appointment scheduled successfully!")
+            } else {
+                // Call the callback with failure
+                onResult(false, "Property not found")
+            }
+        } catch (e: Exception) {
+            // Call the callback with failure
+            onResult(false, "Failed to make appointment: ${e.message}")
         }
     }
+
     // List a property (set listed = true)
     suspend fun listProperty(propertyId: String) {
         firestore.collection(PROPERTIES_COLLECTION)
@@ -191,6 +221,7 @@ class PropertyRepository(
             .update("listed", true)
             .await()
     }
+
     // Mark a property as sold
     suspend fun sellProperty(propertyId: String) {
         val updates = mapOf(
@@ -202,6 +233,40 @@ class PropertyRepository(
             .document(propertyId)
             .update(updates)
             .await()
+    }
+
+
+    suspend fun fetchAppointmentsForUser(userId: String): List<Appointment> {
+        return try {
+            val querySnapshot = appointmentsCollection
+                .whereEqualTo("userId", userId)
+                .get()
+                .await()
+            querySnapshot.toObjects(Appointment::class.java)
+        } catch (e: Exception) {
+            throw Exception("Failed to fetch appointments for user: ${e.message}")
+        }
+    }
+
+    suspend fun fetchAppointmentsForProperty(propertyId: String): List<Appointment> {
+        return try {
+            val querySnapshot = appointmentsCollection
+                .whereEqualTo("propertyId", propertyId)
+                .get()
+                .await()
+            querySnapshot.toObjects(Appointment::class.java)
+        } catch (e: Exception) {
+            throw Exception("Failed to fetch appointments for property: ${e.message}")
+        }
+    }
+
+    suspend fun fetchAllAppointments(): List<Appointment> {
+        return try {
+            val querySnapshot = appointmentsCollection.get().await()
+            querySnapshot.toObjects(Appointment::class.java)
+        } catch (e: Exception) {
+            throw Exception("Failed to fetch all appointments: ${e.message}")
+        }
     }
 
 }
