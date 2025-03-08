@@ -9,6 +9,7 @@ import androidx.navigation.NavController
 import com.keneth.realestateapplication.viewModels.PropertyViewModel
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -64,12 +65,18 @@ fun ListPropertyScreen(
     // State for controlling the visibility of the image dialog
     var showImageDialog by remember { mutableStateOf(false) }
 
+    // State for showing sold property message
+    var showSoldMessage by remember { mutableStateOf(false) }
+
     // Show the image dialog if an image is selected
     if (showImageDialog && selectedImageIndex != -1) {
         ImageDialog(
             images = property?.images ?: emptyList(),
             selectedImageIndex = selectedImageIndex,
-            onDismiss = { showImageDialog = false },
+            onDismiss = {
+                showImageDialog = false
+                selectedImageIndex = -1 // Reset the selected image index
+            },
             onNext = {
                 selectedImageIndex = (selectedImageIndex + 1) % (property?.images?.size ?: 1)
             },
@@ -120,27 +127,13 @@ fun ListPropertyScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Display property status
-                when {
-                    property.isSold -> {
-                        Text(
-                            text = "This property is already sold.${property.isSold}",
-                            color = Color.Red,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
-                    }
+                Row(
+                    horizontalArrangement = Arrangement.SpaceAround,
+                    verticalAlignment = Alignment.CenterVertically
 
-                    property.isListed -> {
-                        Text(
-                            text = "This property is already listed.${property.isListed}",
-                            color = Color.Green,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
-                    }
+                ) {
+                    Text("Sold: ${property.isSold}")
+                    Text("Listed: ${property.isListed}")
                 }
 
                 // Horizontal Image Gallery
@@ -189,6 +182,29 @@ fun ListPropertyScreen(
                     }
                 }
 
+                // Display property status above the button
+                when {
+                    property.isSold -> {
+                        Text(
+                            text = "This property is already sold.",
+                            color = Color.Red,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
+
+                    property.isListed -> {
+                        Text(
+                            text = "This property is already listed.",
+                            color = Color.Green,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
+                }
+
                 // List Property Button (only show if the property is not listed or sold)
                 if (!property.isListed && !property.isSold) {
                     Button(
@@ -202,6 +218,27 @@ fun ListPropertyScreen(
                     ) {
                         Text("List this property")
                     }
+                } else if (property.isSold) {
+                    // Show sold message when button is clicked for a sold property
+                    if (showSoldMessage) {
+                        Text(
+                            text = "This property is sold and cannot be listed.",
+                            color = Color.Red,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
+                    Button(
+                        onClick = { showSoldMessage = true },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp)
+                    ) {
+                        Text("List this property")
+                    }
+                } else if (property.isListed) {
+                    successMessage = "Property is already listed!"
                 }
             } else {
                 // Show loading or error state
