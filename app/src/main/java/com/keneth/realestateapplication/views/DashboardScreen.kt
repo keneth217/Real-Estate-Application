@@ -1,6 +1,5 @@
 package com.keneth.realestateapplication.views
 
-import TotalsPieChart
 import android.content.Context
 import androidx.compose.material3.Card
 import androidx.compose.runtime.Composable
@@ -94,7 +93,7 @@ fun DashboardScreen(
     }
 
     val bottomNavItems = listOf(
-        Screen.PropertyListing, Screen.Reports, Screen.Settings
+      Screen.MyProperties,  Screen.PropertyListing, Screen.Reports, Screen.Settings
     )
 
     ModalNavigationDrawer(drawerState = drawerState, drawerContent = {
@@ -187,12 +186,13 @@ fun DashboardScreen(
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(80.dp),
+                                    .height(80.dp)
+                                    .background(color =Color.White),
                                 shape = RoundedCornerShape(8.dp),
                                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
                             ) {
                                 Box(
-                                    modifier = Modifier.fillMaxSize(),
+                                    //modifier = Modifier.fillMaxSize(),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
@@ -213,8 +213,7 @@ fun DashboardScreen(
                         text = "Properties Statistics",
                         fontSize = 26.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black,
-                        modifier = Modifier.padding(16.dp)
+                        modifier = Modifier.padding(16.dp).fillMaxWidth()
                     )
                 }
 
