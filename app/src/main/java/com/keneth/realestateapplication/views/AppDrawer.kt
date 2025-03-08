@@ -14,16 +14,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.BackdropValue
 import androidx.compose.material.Icon
 //noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material.ripple
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.HorizontalDivider
@@ -44,46 +47,45 @@ fun AppDrawer(
     drawerState: DrawerState,
     scope: CoroutineScope,
     onItemClick: (String) -> Unit,
-
-    currentRoute: String?, // Pass the current route
+    backgroundColor: Color = Color(0xFF12F11B), // Default background color (green)
+    currentRoute: String? // Pass the current route
 ) {
-
-    val interactionSource = remember { MutableInteractionSource() }
     // List of screens to display in the drawer
     val drawerScreens = listOf(
         Screen.Dashboard,
         Screen.AddProperty,
         Screen.PropertyTypes,
+        Screen.MyProperties,
+        Screen.Appointments,
         Screen.Settings,
         Screen.Reports,
-        Screen.MyProperties,
-
 
     )
 
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp)
+            .background(backgroundColor) // Set the background color of the drawer
+           // .padding(horizontal = 16.dp, top = 0.dp)
     ) {
         item {
             // Menu Header with Green Background
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxSize()
                     .background(MaterialTheme.colorScheme.primary)
             ) {
                 Spacer(Modifier.height(12.dp))
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .fillMaxSize()
                         .height(50.dp)
                 ) {
                     // Text with weight to push the Icon to the end
                     Text(
                         text = "Menu",
                         modifier = Modifier
-                            .padding(bottom = 16.dp, start = 16.dp)
+                           // .padding(bottom = 16.dp, start = 16.dp)
                             .align(Alignment.CenterVertically)
                             .weight(1f), // Push the Icon to the end
                         style = MaterialTheme.typography.headlineLarge,
@@ -120,7 +122,11 @@ fun AppDrawer(
                     Text(
                         text = screen.title!!,
                         style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = if (currentRoute == screen.route) {
+                            MaterialTheme.colorScheme.onPrimaryContainer // Selected text color
+                        } else {
+                            MaterialTheme.colorScheme.onSurface // Unselected text color
+                        }
                     )
                 },
                 onClick = {
@@ -130,11 +136,23 @@ fun AppDrawer(
                 icon = {
                     // Add an icon for each drawer item (optional)
                     val icon = when (screen) {
+                        Screen.Dashboard-> Icons.Default.Home
+                        Screen.AddProperty-> Icons.Default.AddCircle
+                        Screen.MyProperties-> Icons.Default.Check
+                        Screen.Appointments-> Icons.Default.ThumbUp
                         Screen.Settings -> Icons.Default.Settings
                         Screen.Reports -> Icons.Default.List
                         else -> Icons.Default.Info
                     }
-                    Icon(imageVector = icon, contentDescription = screen.title)
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = screen.title,
+                        tint = if (currentRoute == screen.route) {
+                            MaterialTheme.colorScheme.onPrimaryContainer // Selected icon color
+                        } else {
+                            MaterialTheme.colorScheme.onSurface // Unselected icon color
+                        }
+                    )
                 },
                 colors = NavigationDrawerItemDefaults.colors(
                     selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
