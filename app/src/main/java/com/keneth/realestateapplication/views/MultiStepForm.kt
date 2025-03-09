@@ -50,6 +50,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -60,6 +61,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.keneth.realestateapplication.R
+import com.keneth.realestateapplication.data.RealEstateUserRoles
 import com.keneth.realestateapplication.enum.RegistrationStep
 import com.keneth.realestateapplication.viewModels.AuthStatus
 import com.keneth.realestateapplication.viewModels.UserViewModel
@@ -89,7 +91,6 @@ fun MultiStepForm(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Show an image only on the first step
             if (currentStep == RegistrationStep.EMAIL_PASSWORD) {
                 Image(
                     painter = painterResource(id = R.drawable.img2),
@@ -97,19 +98,19 @@ fun MultiStepForm(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(200.dp)
-                        .padding(bottom = 20.dp), // Adjust spacing
+                        .padding(bottom = 20.dp),
                     contentScale = ContentScale.Crop
                 )
             }
 
-            // Display the current step title
             Text(
                 text = when (currentStep) {
                     RegistrationStep.EMAIL_PASSWORD -> "Step 1: Email & Password"
                     RegistrationStep.PERSONAL_DETAILS -> "Step 2: Personal Details"
-                    RegistrationStep.ADDRESS -> "Step 3: Address (Optional)"
-                    RegistrationStep.PROFILE_PICTURE -> "Step 4: Profile Picture (Optional)"
-                    RegistrationStep.REVIEW -> "Step 5: Review & Submit"
+                    RegistrationStep.USER_ROLES -> "Step 3: Select Roles"
+                    RegistrationStep.ADDRESS -> "Step 4: Address (Optional)"
+                    RegistrationStep.PROFILE_PICTURE -> "Step 5: Profile Picture (Optional)"
+                    RegistrationStep.REVIEW -> "Step 6: Review & Submit"
                 },
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
@@ -118,26 +119,20 @@ fun MultiStepForm(
                     .padding(bottom = 16.dp)
             )
 
-            // Show registration progress
             RegistrationProgress(currentStep)
-
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Display the current step content
             when (currentStep) {
                 RegistrationStep.EMAIL_PASSWORD -> EmailPasswordStep(multiStepFormViewModel)
                 RegistrationStep.PERSONAL_DETAILS -> PersonalDetailsStep(multiStepFormViewModel)
+                RegistrationStep.USER_ROLES -> RoleStep(multiStepFormViewModel)
                 RegistrationStep.ADDRESS -> AddressStep(multiStepFormViewModel)
                 RegistrationStep.PROFILE_PICTURE -> ProfilePictureStep(multiStepFormViewModel)
-                RegistrationStep.REVIEW -> ReviewStep(
-                    multiStepFormViewModel,
-                    navController = navController
-                )
+                RegistrationStep.REVIEW -> ReviewStep(multiStepFormViewModel, navController)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Navigation buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -145,9 +140,7 @@ fun MultiStepForm(
                 if (currentStep != RegistrationStep.EMAIL_PASSWORD) {
                     Button(
                         onClick = { multiStepFormViewModel.previousStep() },
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(vertical = 8.dp),
+                        modifier = Modifier.padding(vertical = 8.dp),
                         shape = RoundedCornerShape(4.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFFCB35D5),
@@ -171,9 +164,7 @@ fun MultiStepForm(
                                 }
                             )
                         },
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(vertical = 8.dp),
+                        modifier = Modifier.padding(vertical = 8.dp),
                         shape = RoundedCornerShape(4.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF3FC918),
@@ -183,7 +174,7 @@ fun MultiStepForm(
                             defaultElevation = 6.dp,
                             pressedElevation = 2.dp
                         ),
-                        enabled = !isLoading // Disable button while loading
+                        enabled = !isLoading
                     ) {
                         if (isLoading) {
                             CircularProgressIndicator(
@@ -195,18 +186,14 @@ fun MultiStepForm(
                         }
                     }
                 } else {
-                    // Disable "Next" button if required fields are not filled
                     val isNextButtonEnabled = when (currentStep) {
                         RegistrationStep.EMAIL_PASSWORD -> multiStepFormViewModel.isEmailPasswordStepValid()
                         RegistrationStep.PERSONAL_DETAILS -> multiStepFormViewModel.isPersonalDetailsStepValid()
-                        else -> true // Enable for optional steps
+                        else -> true
                     }
-
                     Button(
                         onClick = { multiStepFormViewModel.nextStep() },
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(vertical = 8.dp),
+                        modifier = Modifier.padding(vertical = 8.dp),
                         shape = RoundedCornerShape(4.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFFCB35D5),
@@ -224,7 +211,6 @@ fun MultiStepForm(
             }
 
             if (currentStep == RegistrationStep.EMAIL_PASSWORD) {
-                // Login Link
                 Text(
                     "Already have an account? Login.",
                     modifier = Modifier.clickable {
@@ -234,7 +220,6 @@ fun MultiStepForm(
                 )
             }
 
-            // Skip button for optional steps
             if (currentStep == RegistrationStep.ADDRESS || currentStep == RegistrationStep.PROFILE_PICTURE) {
                 Spacer(modifier = Modifier.height(8.dp))
                 TextButton(onClick = { multiStepFormViewModel.skipStep() }) {
@@ -250,19 +235,23 @@ fun RegistrationProgress(currentStep: RegistrationStep) {
     val progress = when (currentStep) {
         RegistrationStep.EMAIL_PASSWORD -> 0.0f
         RegistrationStep.PERSONAL_DETAILS -> 0.5f
-        RegistrationStep.ADDRESS -> 0.6f
+        RegistrationStep.USER_ROLES -> 0.6F
+        RegistrationStep.ADDRESS -> 0.7f
         RegistrationStep.PROFILE_PICTURE -> 0.8f
         RegistrationStep.REVIEW -> 1.0f
     }
 
+
+
     Column(modifier = Modifier.fillMaxWidth()) {
         LinearProgressIndicator(
-            progress = progress,
+            progress = { progress },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(10.dp),
             color = Color.Green,
-            trackColor = Color.Gray
+            trackColor = Color.Gray,
+            strokeCap = StrokeCap.Round
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
@@ -273,6 +262,7 @@ fun RegistrationProgress(currentStep: RegistrationStep) {
         )
     }
 }
+
 @Composable
 fun EmailPasswordStep(viewModel: MultiStepFormViewModel) {
     Column {
@@ -282,15 +272,41 @@ fun EmailPasswordStep(viewModel: MultiStepFormViewModel) {
             label = { Text("Email") },
             modifier = Modifier.fillMaxWidth()
         )
-        OutlinedTextField(
-            value = viewModel.password,
-            onValueChange = { viewModel.password = it },
-            label = { Text("Password") },
-            modifier = Modifier.fillMaxWidth(),
-            visualTransformation = PasswordVisualTransformation()
+        PasswordField(
+            password = viewModel.password,
+            onPasswordChange = { viewModel.password = it }
         )
     }
 }
+
+@Composable
+fun RoleStep(viewModel: MultiStepFormViewModel) {
+    // Fetch the selected roles from the ViewModel
+    val selectedRoles = viewModel.selectedRoles
+
+    // Display a checkbox for each role
+    Column(modifier = Modifier.fillMaxWidth()) {
+        RealEstateUserRoles.entries.forEach { role ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        viewModel.toggleRoleSelection(role)
+                    }
+                    .padding(8.dp)
+            ) {
+                Checkbox(
+                    checked = selectedRoles.contains(role),
+                    onCheckedChange = { viewModel.toggleRoleSelection(role) }
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(text = role.name, style = MaterialTheme.typography.bodyLarge)
+            }
+        }
+    }
+}
+
 @Composable
 fun PersonalDetailsStep(viewModel: MultiStepFormViewModel) {
     Column {
@@ -314,6 +330,7 @@ fun PersonalDetailsStep(viewModel: MultiStepFormViewModel) {
         )
     }
 }
+
 @Composable
 fun AddressStep(viewModel: MultiStepFormViewModel) {
     Column(
@@ -350,6 +367,7 @@ fun AddressStep(viewModel: MultiStepFormViewModel) {
         )
     }
 }
+
 @Composable
 fun ProfilePictureStep(viewModel: MultiStepFormViewModel) {
     val launcher = rememberLauncherForActivityResult(
@@ -389,8 +407,8 @@ fun ProfilePictureStep(viewModel: MultiStepFormViewModel) {
         )
     }
 }
-@Composable
 
+@Composable
 fun ReviewStep(viewModel: MultiStepFormViewModel, navController: NavController) {
     val isSuccess = viewModel.isSuccess
     val isLoading = viewModel.isLoading
@@ -430,6 +448,7 @@ fun ReviewStep(viewModel: MultiStepFormViewModel, navController: NavController) 
         Text("First Name: ${viewModel.firstName}")
         Text("Last Name: ${viewModel.lastName}")
         Text("Phone: ${viewModel.phone}")
+        Text("roles selected:${viewModel.selectedRoles}")
         Text("Address: ${viewModel.address.street}, ${viewModel.address.city}, ${viewModel.address.state}, ${viewModel.address.postalCode}, ${viewModel.address.country}")
 
         // Submit button
