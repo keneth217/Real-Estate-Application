@@ -20,9 +20,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.keneth.realestateapplication.R
 import com.keneth.realestateapplication.UserPreferences
@@ -44,13 +49,16 @@ fun LoginScreen(
     val authState = viewModel.authState.value
     val isLoading = viewModel.isLoading.value
 
-    // Handle authentication result
+
+    val profileFontFamily = FontFamily(
+        Font(R.font.darkmode_regular_400, weight = FontWeight.Normal),
+        Font(R.font.cluisher_brush, weight = FontWeight.Bold)
+    )
     LaunchedEffect(authState) {
         when (authState) {
             is AuthStatus.SuccessWithData -> {
                 val token = authState.user?.get("token").toString()
-                println("Token from authState: $token") // Print the token
-
+                println("Token from authState: $token")
                 if (token.isNotEmpty()) {
                     // Store token
                     UserPreferences.deleteToken(context)
@@ -65,12 +73,10 @@ fun LoginScreen(
                     println("Token is empty, not navigating to dashboard")
                 }
             }
-
             is AuthStatus.Error -> {
                 errorMessage = authState.message
                 showErrorSnackbar = true
             }
-
             else -> {}
         }
     }
@@ -88,8 +94,8 @@ fun LoginScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-                .background(Color.White),
+                .padding(paddingValues),
+            //    .background(Color.White),
             contentAlignment = Alignment.Center
         ) {
             Column(
@@ -99,19 +105,23 @@ fun LoginScreen(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                Text("WELCOME BACK",
+                    style = TextStyle(
+                        fontSize = 40.sp,
+                        fontFamily = profileFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        color = Color.White, letterSpacing = 5.0.sp
+                    )
 
-                Text("Login", style = MaterialTheme.typography.headlineMedium)
-
+                )
+                Spacer(modifier = Modifier.height(16.dp))
                 Image(
                     painter = painterResource(id = R.drawable.img10),
 
                     contentDescription = "Splash Image",
                     modifier = Modifier.size(250.dp)
                 )
-
                 Spacer(modifier = Modifier.height(16.dp))
-
-                // Email Input
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
@@ -119,22 +129,12 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
                 )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Password Input
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = { Text("Password") },
-                    modifier = Modifier.fillMaxWidth(),
-                    visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-                )
-
                 Spacer(modifier = Modifier.height(16.dp))
-
-                // Login Button
+                PasswordField(
+                    password = password,
+                    onPasswordChange = { password = it }
+                )
+                Spacer(modifier = Modifier.height(16.dp))
                 Button(
                     onClick = { viewModel.login(email, password) },
                     modifier = Modifier
