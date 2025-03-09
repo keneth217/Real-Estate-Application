@@ -117,13 +117,13 @@ fun LoginScreen(
                     )
 
                 )
-                Spacer(modifier = Modifier.height(16.dp))
-                Image(
-                    painter = painterResource(id = R.drawable.img10),
-
-                    contentDescription = "Splash Image",
-                    modifier = Modifier.size(250.dp)
-                )
+//               sp Spacer(modifier = Modifier.height(16.dp))
+//                Image(
+//                    painter = painterResource(id = R.drawable.img10),
+//
+//                    contentDescription = "Splash Image",
+//                    modifier = Modifier.size(250.dp)
+//                )
                 Spacer(modifier = Modifier.height(16.dp))
                 OutlinedTextField(
                     value = email,
