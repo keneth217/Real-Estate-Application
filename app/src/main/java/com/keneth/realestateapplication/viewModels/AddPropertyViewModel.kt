@@ -15,14 +15,14 @@ import com.keneth.realestateapplication.data.PropertyType
 import com.keneth.realestateapplication.enum.AddPropertyStep
 import kotlinx.coroutines.launch
 import java.util.UUID
+
+
 class AddPropertyViewModel(
     private val propertyViewModel: PropertyViewModel
 ) : ViewModel() {
-    // Current step in the form
     var currentStep by mutableStateOf(AddPropertyStep.BASIC_DETAILS)
         private set
 
-    // Form data
     var title by mutableStateOf("")
     var description by mutableStateOf("")
     var price by mutableStateOf(0.0)
@@ -37,12 +37,10 @@ class AddPropertyViewModel(
     var amenities by mutableStateOf(Amenities())
     var images = mutableStateListOf<Uri>()
 
-    // State for tracking form submission
     var isLoading by mutableStateOf(false)
     var isSuccess by mutableStateOf(false)
     var errorMessage by mutableStateOf<String?>(null)
 
-    // Move to the next step
     fun nextStep() {
         if (validateCurrentStep()) {
             currentStep = when (currentStep) {
@@ -53,14 +51,12 @@ class AddPropertyViewModel(
                 AddPropertyStep.AMENITIES -> AddPropertyStep.AMENITIES
                 AddPropertyStep.IMAGES -> AddPropertyStep.REVIEW
                 AddPropertyStep.REVIEW -> AddPropertyStep.REVIEW
-
             }
         } else {
             errorMessage = "Please fill out all required fields."
         }
     }
 
-    // Move to the previous step
     fun previousStep() {
         currentStep = when (currentStep) {
             AddPropertyStep.BASIC_DETAILS -> AddPropertyStep.BASIC_DETAILS
@@ -73,7 +69,6 @@ class AddPropertyViewModel(
         }
     }
 
-    // Validate the current step
     private fun validateCurrentStep(): Boolean {
         return when (currentStep) {
             AddPropertyStep.BASIC_DETAILS -> title.isNotBlank() && description.isNotBlank() && price > 0
@@ -83,11 +78,9 @@ class AddPropertyViewModel(
             AddPropertyStep.IMAGES -> images.isNotEmpty()
             AddPropertyStep.AMENITIES -> true
             AddPropertyStep.REVIEW -> true
-
         }
     }
 
-    // Submit the form
     fun submitForm(onSuccess: () -> Unit) {
         if (!validateForm()) {
             errorMessage = "Please fill out all required fields."
@@ -134,7 +127,6 @@ class AddPropertyViewModel(
         }
     }
 
-    // Validate the entire form
     private fun validateForm(): Boolean {
         return title.isNotBlank() &&
                 description.isNotBlank() &&
