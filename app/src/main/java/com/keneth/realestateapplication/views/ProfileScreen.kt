@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
+import androidx.compose.material.ButtonColors
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.OutlinedButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -59,7 +61,8 @@ fun ProfileScreen(
 
     // Default user if userDetails is null
     val user = userDetails ?: User("", "", "", "", "", "")
-
+    val profilePicture by viewModelUser.userProfile
+    val profileImage = viewModelUser.userProfile.value?.profileImage ?: ""
     // Fetch user profile when the screen is launched
     LaunchedEffect(Unit) {
         viewModelUser.fetchUserProfile()
@@ -105,18 +108,15 @@ fun ProfileScreen(
                             .background(Color.Green) // Green background
                     )
 
-                    // Profile Image
 
                     println("user profile image in profile page :${user.profileImage}")
-                    Image(
-                        painter = painterResource(id = R.drawable.person),
-
-                        contentDescription = "Profile Image",
+                    ProfilePicture(
+                        profilePicture = profileImage,
+                        profileImage = profileImage.toString(),
                         modifier = Modifier
                             .size(100.dp)
-                            .clip(CircleShape) // Clip to circle
-                            .border(2.dp, Color.White, CircleShape), // White border
-                        colorFilter = ColorFilter.tint(Color.White) // White tint on image
+                            .clip(CircleShape),
+                        navController = navController
                     )
                 }
             }
@@ -175,7 +175,7 @@ fun ProfileScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Green.copy(alpha = 0.5f)) // Semi-transparent overlay
+                .background(Color.Black.copy(alpha = 0.5f)) // Semi-transparent overlay
                 .clickable { confirmLogout = false }, // Dismiss when clicking outside
             contentAlignment = Alignment.Center
         ) {
@@ -215,7 +215,13 @@ fun ProfileScreen(
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
                         OutlinedButton(
-                            onClick = { confirmLogout = false }
+
+                            onClick = { confirmLogout = false },
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = Color.Red, // Text color
+                            ),
+                            border = ButtonDefaults.outlinedBorder,
+                            modifier = Modifier.padding(8.dp)
                         ) {
                             Text("Cancel")
                         }
