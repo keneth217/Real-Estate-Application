@@ -1,13 +1,13 @@
 package com.keneth.realestateapplication.data
 
 data class User(
-    val uuid: String = "", // Unique identifier for the user
-    val firstName: String = "", // User's first name
-    val lastName: String = "", // User's last name
-    val phone: String = "", // User's phone number
+    val uuid: String = "",
+    val firstName: String = "",
+    val lastName: String = "",
+    val phone: String = "",
     val email: String = "", // User's email address
     val password: String = "", // User's password (should be hashed in production)
-    val userRole: RealEstateUserRoles = RealEstateUserRoles.GUEST, // User's role (default: GUEST)
+    val userRole: Set<RealEstateUserRoles> = emptySet(), // User's role (default: GUEST)
     val profileImage: String = "", // URL to the user's profile image
     val address: USerAddress = USerAddress(), // User's address
     val isEmailVerified: Boolean = false, // Whether the user's email is verified
@@ -26,9 +26,9 @@ data class User(
             "phone" to phone,
             "email" to email,
             "password" to password,
-            "userRole" to userRole.name,
+            "userRole" to userRole,
             "profileImage" to profileImage,
-            "add                                          ress" to mapOf(
+            "address" to mapOf(
                 "street" to address.street,
                 "city" to address.city,
                 "state" to address.state,
