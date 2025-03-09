@@ -73,10 +73,12 @@ fun LoginScreen(
                     println("Token is empty, not navigating to dashboard")
                 }
             }
+
             is AuthStatus.Error -> {
                 errorMessage = authState.message
                 showErrorSnackbar = true
             }
+
             else -> {}
         }
     }
@@ -105,7 +107,8 @@ fun LoginScreen(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("WELCOME BACK",
+                Text(
+                    "WELCOME BACK",
                     style = TextStyle(
                         fontSize = 40.sp,
                         fontFamily = profileFontFamily,
