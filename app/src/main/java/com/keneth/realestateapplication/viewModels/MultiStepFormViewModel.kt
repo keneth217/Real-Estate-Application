@@ -13,13 +13,11 @@ import com.keneth.realestateapplication.viewModels.UserViewModel
 import java.util.UUID
 
 class MultiStepFormViewModel(
-    private val userViewModel: UserViewModel // Pass UserViewModel as a dependency
+    private val userViewModel: UserViewModel
 ) : ViewModel() {
-    // Current step in the form
     var currentStep by mutableStateOf(RegistrationStep.EMAIL_PASSWORD)
         private set
 
-    // Form data
     var email by mutableStateOf("")
     var password by mutableStateOf("")
     var firstName by mutableStateOf("")
@@ -27,9 +25,7 @@ class MultiStepFormViewModel(
     var phone by mutableStateOf("")
     var address by mutableStateOf(USerAddress())
     var profilePicture by mutableStateOf<Uri?>(null)
-
-    // Additional fields from the User class
-    var userRole by mutableStateOf(RealEstateUserRoles.GUEST)
+    var selectedRoles by mutableStateOf(setOf<RealEstateUserRoles>())
     var isEmailVerified by mutableStateOf(false)
     var isPhoneVerified by mutableStateOf(false)
     var createdAt by mutableStateOf(System.currentTimeMillis())
@@ -37,13 +33,18 @@ class MultiStepFormViewModel(
     var preferences by mutableStateOf(UserPreferences())
     var favorites by mutableStateOf<List<String>>(emptyList())
     var languagePreference by mutableStateOf(LanguagePreference.ENGLISH)
-
-    // State for tracking form submission
     var isLoading by mutableStateOf(false)
     var isSuccess by mutableStateOf(false)
     var errorMessage by mutableStateOf<String?>(null)
 
-    // Validation functions
+    fun toggleRoleSelection(role: RealEstateUserRoles) {
+        selectedRoles = if (selectedRoles.contains(role)) {
+            selectedRoles - role
+        } else {
+            selectedRoles + role
+        }
+    }
+
     fun isEmailPasswordStepValid(): Boolean {
         return email.isNotBlank() && password.isNotBlank()
     }
@@ -52,7 +53,6 @@ class MultiStepFormViewModel(
         return firstName.isNotBlank() && lastName.isNotBlank() && phone.isNotBlank()
     }
 
-    // Move to the next step
     fun nextStep() {
         when (currentStep) {
             RegistrationStep.EMAIL_PASSWORD -> {
@@ -63,40 +63,51 @@ class MultiStepFormViewModel(
 
             RegistrationStep.PERSONAL_DETAILS -> {
                 if (isPersonalDetailsStepValid()) {
+                    currentStep = RegistrationStep.USER_ROLES
+                }
+            }
+
+            RegistrationStep.USER_ROLES -> {
+                if (selectedRoles.isNotEmpty()) {
                     currentStep = RegistrationStep.ADDRESS
+                } else {
+                    errorMessage = "Please select at least one role."
                 }
             }
 
             RegistrationStep.ADDRESS -> currentStep = RegistrationStep.PROFILE_PICTURE
             RegistrationStep.PROFILE_PICTURE -> currentStep = RegistrationStep.REVIEW
-            RegistrationStep.REVIEW -> {} // Stay on review step
+            RegistrationStep.REVIEW -> {}
         }
     }
 
-    // Move to the previous step
     fun previousStep() {
         currentStep = when (currentStep) {
-            RegistrationStep.EMAIL_PASSWORD -> RegistrationStep.EMAIL_PASSWORD // Stay on first step
+            RegistrationStep.EMAIL_PASSWORD -> RegistrationStep.EMAIL_PASSWORD
             RegistrationStep.PERSONAL_DETAILS -> RegistrationStep.EMAIL_PASSWORD
-            RegistrationStep.ADDRESS -> RegistrationStep.PERSONAL_DETAILS
+            RegistrationStep.USER_ROLES -> RegistrationStep.PERSONAL_DETAILS
+            RegistrationStep.ADDRESS -> RegistrationStep.USER_ROLES
             RegistrationStep.PROFILE_PICTURE -> RegistrationStep.ADDRESS
             RegistrationStep.REVIEW -> RegistrationStep.PROFILE_PICTURE
         }
     }
 
-    // Skip a step
     fun skipStep() {
         currentStep = when (currentStep) {
             RegistrationStep.ADDRESS -> RegistrationStep.PROFILE_PICTURE
             RegistrationStep.PROFILE_PICTURE -> RegistrationStep.REVIEW
-            else -> currentStep // Do nothing for other steps
+            else -> currentStep
         }
     }
 
-    // Submit the form
     fun submitForm(onSuccess: () -> Unit) {
         if (!validateForm()) {
             errorMessage = "Please fill out all required fields."
+            return
+        }
+
+        if (selectedRoles.isEmpty()) {
+            errorMessage = "Please select at least one role."
             return
         }
 
@@ -104,16 +115,15 @@ class MultiStepFormViewModel(
         errorMessage = null
 
         try {
-            // Create the User object
             val user = User(
-                uuid = UUID.randomUUID().toString(), // Generate a unique ID
+                uuid = UUID.randomUUID().toString(),
                 firstName = firstName,
                 lastName = lastName,
                 phone = phone,
                 email = email,
                 password = password,
-                userRole = userRole,
-                profileImage = profilePicture?.toString() ?: "", // Use an empty string if profilePicture is null
+                userRole = selectedRoles,
+                profileImage = profilePicture?.toString() ?: "",
                 address = address,
                 isEmailVerified = isEmailVerified,
                 isPhoneVerified = isPhoneVerified,
@@ -124,10 +134,9 @@ class MultiStepFormViewModel(
                 languagePreference = languagePreference
             )
 
-            // Call the signUp function in UserViewModel
             userViewModel.signUp(email, password, user.toMap(), profilePicture!!)
             isSuccess = true
-            println("Registration success: $user")
+            println("Registration success: $user,$profilePicture",)
         } catch (e: Exception) {
             errorMessage = "Failed to register user: ${e.message}"
             isSuccess = false
@@ -136,7 +145,6 @@ class MultiStepFormViewModel(
         }
     }
 
-    // Validate the entire form
     private fun validateForm(): Boolean {
         return email.isNotBlank() &&
                 password.isNotBlank() &&
