@@ -30,6 +30,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.time.LocalTime
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import com.keneth.realestateapplication.R
 
 import kotlinx.coroutines.launch
 
@@ -70,6 +73,11 @@ fun DashboardScreen(
         in 16..20 -> "Good Evening"
         else -> "Good Night"
     }
+
+    val profileFontFamily = FontFamily(
+        Font(R.font.darkmode_regular_400, weight = FontWeight.Normal),
+        Font(R.font.cluisher_brush, weight = FontWeight.Bold)
+    )
     // Fetch data from ViewModel
     val totalSales by viewModel.totalSales
     val userProfile by viewModelUser.userProfile
@@ -143,18 +151,20 @@ fun DashboardScreen(
                                 Column {
                                     Text(
                                         text = "$greeting ,", style = TextStyle(
-                                            fontSize = 20.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = Color.White
+                                            fontSize = 24.sp,
+                                            fontFamily = profileFontFamily,
+                                            fontWeight = FontWeight.Normal,
+                                            color = Color.White, letterSpacing = 5.0.sp
                                         )
                                     )
                                     Spacer(modifier = Modifier.padding(top = 4.dp))
 
                                     Text(
                                         text = displayName, style = TextStyle(
-                                            fontSize = 16.sp,
+                                            fontSize = 30.sp,
+                                            fontFamily = profileFontFamily,
                                             fontWeight = FontWeight.Bold,
-                                            color = Color.White
+                                            color = Color.White, letterSpacing = 5.0.sp
                                         )
                                     )
                                 }
@@ -163,22 +173,11 @@ fun DashboardScreen(
                                     profilePicture = profileImage,
                                     profileImage = profileImage.toString(),
                                     modifier = Modifier
-                                        .size(100.dp)
+                                        .size(60.dp)
                                         .clip(CircleShape),
                                   navController =navController
                                 )
-//                                Image(
-//                                    painter = painterResource(id = R.drawable.person),
-//                                    contentDescription = "Profile Image",
-//                                    modifier = Modifier
-//                                        .size(50.dp)
-//                                        .clip(CircleShape)
-//                                        .border(2.dp, Color.White, CircleShape)
-//                                        .clickable {
-//                                            navController.navigate(Screen.Profile.route)
-//                                        },
-//                                    colorFilter = ColorFilter.tint(Color.White)
-//                                )
+
                             }
 
                             // Card for total sales
@@ -192,11 +191,12 @@ fun DashboardScreen(
                                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
                             ) {
                                 Box(
-                                    //modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
+                                    modifier = Modifier.fillMaxSize()
+                                    .background(color =Color.White),
+                                    contentAlignment = Alignment.Center,
                                 ) {
                                     Text(
-                                        text = "Total Sales: $totalSales",
+                                        text = "Sales: $totalSales",
                                         fontSize = 22.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = Color.Black
