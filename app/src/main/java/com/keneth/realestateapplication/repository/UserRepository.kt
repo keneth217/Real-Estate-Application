@@ -38,31 +38,29 @@ class UserRepository(
         imageUri: Uri
     ): Boolean {
         return try {
-            // Create user with email and password
             val authResult = auth.createUserWithEmailAndPassword(email, password).await()
             val userId = authResult.user?.uid
 
             if (userId != null) {
-                // Upload the profile image and get its URL
+                println("User created with ID: $userId")
                 val imageUrl = uploadImage(imageUri)
+                println("Image uploaded, URL: $imageUrl")
 
-                // Add the image URL to the user data
                 val updatedUserData = userData.toMutableMap().apply {
-                    put(
-                        "profileImage",
-                        imageUrl ?: ""
-                    ) // Add the image URL or an empty string if upload fails
+                    put("profileImage", imageUrl ?: "")
                 }
+                println("User data to save: $updatedUserData")
 
-                // Save user data to Firestore
                 firestore.collection("users").document(userId).set(updatedUserData).await()
-                true // Return true if successful
+                println("User data saved to Firestore")
+                true
             } else {
-                false // Return false if user creation failed
+                println("User creation failed: UID is null")
+                false
             }
         } catch (e: Exception) {
-            println("Sign-up failed: ${e.message}") // Debug print
-            false // Return false if an exception occurs
+            println("Sign-up failed: ${e.message}")
+            false
         }
     }
 
@@ -140,7 +138,8 @@ class UserRepository(
                     lastName = userData["lastName"] as? String ?: "",
                     phone = userData["phone"] as? String ?: "",
                     email = userData["email"] as? String ?: "",
-                    password = userData["password"] as? String ?: ""
+                    password = userData["password"] as? String ?: "",
+                    profileImage = userData["profileImage"] as? String ?: ""
                 )
             }
         } catch (e: Exception) {
