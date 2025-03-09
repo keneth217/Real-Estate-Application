@@ -91,7 +91,6 @@ fun AddPropertyForm(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Display the current step title
             Text(
                 text = when (currentStep) {
                     AddPropertyStep.BASIC_DETAILS -> "Step 1: Basic Details"
@@ -108,23 +107,16 @@ fun AddPropertyForm(
                     .align(Alignment.Start)
                     .padding(bottom = 16.dp)
             )
-
-            // Show progress
             PropertyProgress(currentStep)
-
             Spacer(modifier = Modifier.height(20.dp))
-
-            // Display the current step content
             when (currentStep) {
                 AddPropertyStep.BASIC_DETAILS -> BasicDetailsStep(multiStepFormPropertyViewModel)
                 AddPropertyStep.CONTACT_INFO -> ContactInfoStep(multiStepFormPropertyViewModel)
                 AddPropertyStep.ADDRESS -> AddressStep(multiStepFormPropertyViewModel)
-
                 AddPropertyStep.PROPERTY_TYPE -> PropertyTypeStep(
                     propertyViewModel = propertyViewModel,
                     addPropertyViewModel = multiStepFormPropertyViewModel
                 )
-
                 AddPropertyStep.IMAGES -> ImagesStep(multiStepFormPropertyViewModel)
                 AddPropertyStep.AMENITIES -> AmenitiesStep(multiStepFormPropertyViewModel)
                 AddPropertyStep.REVIEW -> ReviewStep(
@@ -132,10 +124,7 @@ fun AddPropertyForm(
                     navController = navController
                 )
             }
-
             Spacer(modifier = Modifier.height(16.dp))
-
-            // Navigation buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -159,9 +148,7 @@ fun AddPropertyForm(
                         onClick = {
                             multiStepFormPropertyViewModel.submitForm(
                                 onSuccess = {
-                                    // This block will be executed when the property is successfully added
-                                    multiStepFormPropertyViewModel.isSuccess =
-                                        true // Set success state
+                                    multiStepFormPropertyViewModel.isSuccess = true
                                 }
                             )
                         },
@@ -176,7 +163,7 @@ fun AddPropertyForm(
                             pressedElevation = 2.dp,
                             hoveredElevation = 8.dp
                         ),
-                        enabled = !isLoading // Disable button while loading
+                        enabled = !isLoading
                     ) {
                         if (isLoading) {
                             CircularProgressIndicator(
@@ -208,8 +195,6 @@ fun AddPropertyForm(
             }
         }
     }
-
-    // Show error message
     if (errorMessage != null) {
         AlertDialog(
             onDismissRequest = { multiStepFormPropertyViewModel.errorMessage = null },
@@ -387,6 +372,7 @@ fun AmenitiesStep(viewModel: AddPropertyViewModel) {
         }
     }
 }
+
 @Composable
 fun AddressStep(viewModel: AddPropertyViewModel) {
     Column {
@@ -422,6 +408,7 @@ fun AddressStep(viewModel: AddPropertyViewModel) {
         )
     }
 }
+
 @Composable
 fun PropertyTypeStep(
     propertyViewModel: PropertyViewModel,
