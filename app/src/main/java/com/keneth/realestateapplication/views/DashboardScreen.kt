@@ -62,9 +62,9 @@ fun DashboardScreen(
     val firstName = viewModelUser.userFirstName.value
     val welcome = viewModelUser.userProfile.value
     var displayName by remember { mutableStateOf("User") }
-  //  val profileImage: String = viewModelUser.userProfile.value?.profileImage ?: ""
+    //  val profileImage: String = viewModelUser.userProfile.value?.profileImage ?: ""
     if (welcome != null) {
-        displayName = welcome.lastName.uppercase()
+        displayName = welcome.firstName.uppercase()
     }
     val currentHour = LocalTime.now().hour
     val greeting = when (currentHour) {
@@ -101,7 +101,7 @@ fun DashboardScreen(
     }
 
     val bottomNavItems = listOf(
-      Screen.MyProperties,  Screen.PropertyListing, Screen.Reports, Screen.Settings
+        Screen.MyProperties, Screen.PropertyListing, Screen.Reports, Screen.Settings
     )
 
     ModalNavigationDrawer(drawerState = drawerState, drawerContent = {
@@ -137,7 +137,7 @@ fun DashboardScreen(
                             .height(200.dp)
                             .background(
                                 brush = Brush.verticalGradient(
-                                    colors = listOf(Color(0xFF03F603), Color(0xFF7AF198))
+                                    colors = listOf(Color(0xFF03F603), Color(0xFF3ACF5F))
                                 ),
                                 shape = RoundedCornerShape(bottomStart = 10.dp, bottomEnd = 10.dp)
                             )
@@ -152,9 +152,10 @@ fun DashboardScreen(
                                     Text(
                                         text = "$greeting ,", style = TextStyle(
                                             fontSize = 24.sp,
-                                            fontFamily = profileFontFamily,
+                                          // fontFamily = FontFamily.Cursive,
                                             fontWeight = FontWeight.Normal,
-                                            color = Color.White, letterSpacing = 5.0.sp
+                                            color = Color.White
+                                            //letterSpacing = 5.0.sp
                                         )
                                     )
                                     Spacer(modifier = Modifier.padding(top = 4.dp))
@@ -164,7 +165,8 @@ fun DashboardScreen(
                                             fontSize = 30.sp,
                                             fontFamily = profileFontFamily,
                                             fontWeight = FontWeight.Bold,
-                                            color = Color.White, letterSpacing = 5.0.sp
+                                            color = Color.White,
+                                            letterSpacing = 2.0.sp
                                         )
                                     )
                                 }
@@ -175,7 +177,7 @@ fun DashboardScreen(
                                     modifier = Modifier
                                         .size(60.dp)
                                         .clip(CircleShape),
-                                  navController =navController
+                                    navController = navController
                                 )
 
                             }
@@ -186,13 +188,14 @@ fun DashboardScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(80.dp)
-                                    .background(color =Color.White),
+                                    .background(color = Color.White),
                                 shape = RoundedCornerShape(8.dp),
                                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
                             ) {
                                 Box(
-                                    modifier = Modifier.fillMaxSize()
-                                    .background(color =Color.White),
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(color = Color.White),
                                     contentAlignment = Alignment.Center,
                                 ) {
                                     Text(
@@ -213,7 +216,9 @@ fun DashboardScreen(
                         text = "Properties Statistics",
                         fontSize = 26.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(16.dp).fillMaxWidth()
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .fillMaxWidth()
                     )
                 }
 
@@ -229,12 +234,12 @@ fun DashboardScreen(
 
                 // Property Categories
                 item {
-                    Column(modifier = Modifier.padding(top = 16.dp, start = 20.dp)) {
+                    Column(modifier = Modifier.padding(8.dp)) {
                         Text(
                             text = "Property Categories",
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(16.dp)
+                            modifier = Modifier.padding(8.dp)
                         )
 
                         if (propertyCategoryLists.isEmpty()) {
