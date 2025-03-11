@@ -7,9 +7,9 @@ data class User(
     val phone: String = "",
     val email: String = "", // User's email address
     val password: String = "", // User's password (should be hashed in production)
-    val userRole: Set<RealEstateUserRoles> = emptySet(), // User's role (default: GUEST)
+    val userRole: List<RealEstateUserRoles>,// User's role (default: GUEST)
     val profileImage: String = "", // URL to the user's profile image
-    val address: USerAddress = USerAddress(), // User's address
+    val address: UserAddress = UserAddress(), // User's address
     val isEmailVerified: Boolean = false, // Whether the user's email is verified
     val isPhoneVerified: Boolean = false, // Whether the user's phone is verified
     val createdAt: Long = System.currentTimeMillis(), // Timestamp when the user was created
@@ -26,7 +26,7 @@ data class User(
             "phone" to phone,
             "email" to email,
             "password" to password,
-            "userRole" to userRole,
+            "userRole" to userRole.map { it.name }, // Convert roles to a list of strings
             "profileImage" to profileImage,
             "address" to mapOf(
                 "street" to address.street,
@@ -59,7 +59,7 @@ enum class LanguagePreference {
 }
 
 // Address data class for user location
-data class USerAddress(
+data class UserAddress(
     val street: String = "",
     val city: String = "",
     val state: String = "",
