@@ -47,7 +47,7 @@ fun AppDrawer(
     drawerState: DrawerState,
     scope: CoroutineScope,
     onItemClick: (String) -> Unit,
-    backgroundColor: Color = Color(0xFF12F11B), // Default background color (green)
+    backgroundColor: Color = Color(0xFFC11DEC), // Default background color (green)
     currentRoute: String? // Pass the current route
 ) {
     // List of screens to display in the drawer
