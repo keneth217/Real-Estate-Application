@@ -25,6 +25,8 @@ sealed class Screen(
     object Profile : Screen("profile", "Profile")
     object Settings : Screen("settings", "Settings")
 
+    object UpdateProfileScreen : Screen("updateProfile", "Update Profile")
+
     // Property Management Screens
     object PropertyCategories : Screen("propertyCategories", "Property Categories")
     object PropertyCategoryListing :
