@@ -1,8 +1,6 @@
 package com.keneth.realestateapplication.views
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,7 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
-import androidx.compose.material.ButtonColors
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.OutlinedButton
 import androidx.compose.material3.Card
@@ -37,16 +34,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.keneth.realestateapplication.R
+import com.keneth.realestateapplication.data.UserAddress
 import com.keneth.realestateapplication.data.User
 import com.keneth.realestateapplication.viewModels.UserViewModel
 
@@ -59,10 +58,25 @@ fun ProfileScreen(
     val userDetails = viewModelUser.userProfile.value
     var confirmLogout by remember { mutableStateOf(false) }
 
-    // Default user if userDetails is null
-    val user = userDetails ?: User("", "", "", "", "", "")
+// Default user if userDetails is null
+    val user = userDetails ?: User(
+        uuid = "",
+        firstName = "",
+        lastName = "",
+        phone = "",
+        email = "",
+        password = "",
+        userRole = emptyList(),
+        profileImage = "",
+
+        )
     val profilePicture by viewModelUser.userProfile
     val profileImage = viewModelUser.userProfile.value?.profileImage ?: ""
+    val profileFontFamily = FontFamily(
+        Font(R.font.darkmode_regular_400, weight = FontWeight.Normal),
+        Font(R.font.cluisher_brush, weight = FontWeight.Bold)
+    )
+    println("user details: $user")
     // Fetch user profile when the screen is launched
     LaunchedEffect(Unit) {
         viewModelUser.fetchUserProfile()
@@ -100,6 +114,7 @@ fun ProfileScreen(
                         .align(Alignment.BottomCenter)
                         .offset(y = 50.dp) // Move down by 50dp
                 ) {
+
                     // Green Clip Background
                     Box(
                         modifier = Modifier
@@ -132,8 +147,9 @@ fun ProfileScreen(
             ) {
                 Text(
                     text = user.firstName.uppercase() + " " + user.lastName.uppercase(),
+                    fontFamily = profileFontFamily,
                     style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold, letterSpacing = 2.0.sp
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -148,9 +164,43 @@ fun ProfileScreen(
                     style = MaterialTheme.typography.bodyLarge,
                     color = Color.Gray
                 )
+                Row {
+                    Text(
+                        text = "P.0 Box -",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.Gray
+                    )
+                    Text(
+                        text = formatAddress(user.address),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.Gray
+                    )
+                }
+
 
                 Spacer(modifier = Modifier.height(30.dp))
-
+                Button(
+                    onClick = {
+                        val userId = user.uuid // Get the current user's ID
+                        if (userId != null) {
+                            navController.navigate("${Screen.UpdateProfileScreen.route}/$userId")
+                        } else {
+                            // Handle case where userId is null (e.g., show an error message)
+                            println("Error: User ID is null")
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth(1f)
+                        .padding(20.dp)
+                        .align(Alignment.CenterHorizontally)
+                ) {
+                    Text(
+                        "Update Details",
+                        style = TextStyle(
+                            color = Color.White
+                        )
+                    )
+                }
                 // Logout Button
                 Button(
                     onClick = { confirmLogout = true },
@@ -242,4 +292,14 @@ fun ProfileScreen(
             }
         }
     }
+}
+
+
+// Utility function to format the address
+fun formatAddress(address: UserAddress?): String {
+    return "${address?.postalCode ?: "N/A"}, " +
+            "${address?.street ?: "Unknown Street"}, " +
+            "${address?.city ?: "Unknown City"}-" +
+            "${address?.country ?: "Unknown Country"}"
+
 }
