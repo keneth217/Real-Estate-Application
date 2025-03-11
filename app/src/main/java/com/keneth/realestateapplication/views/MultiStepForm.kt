@@ -1,6 +1,6 @@
 package com.keneth.realestateapplication.views
 
-import MultiStepFormViewModel
+import com.keneth.realestateapplication.viewModels.MultiStepFormViewModel
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -17,9 +17,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -37,7 +34,6 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -54,7 +50,6 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -74,9 +69,10 @@ fun MultiStepForm(
     multiStepFormViewModel: MultiStepFormViewModel
 ) {
     val currentStep = multiStepFormViewModel.currentStep
-    val isLoading = multiStepFormViewModel.isLoading
+    val isLoading = userViewModel.isLoading.value
     val isSuccess = multiStepFormViewModel.isSuccess
     val errorMessage = multiStepFormViewModel.errorMessage
+    val authStatus= userViewModel.authState.value
 
     Scaffold(
         modifier = Modifier
@@ -128,7 +124,7 @@ fun MultiStepForm(
                 RegistrationStep.USER_ROLES -> RoleStep(multiStepFormViewModel)
                 RegistrationStep.ADDRESS -> AddressStep(multiStepFormViewModel)
                 RegistrationStep.PROFILE_PICTURE -> ProfilePictureStep(multiStepFormViewModel)
-                RegistrationStep.REVIEW -> ReviewStep(multiStepFormViewModel, navController)
+                RegistrationStep.REVIEW -> ReviewStep(multiStepFormViewModel, navController,userViewModel)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -176,7 +172,7 @@ fun MultiStepForm(
                         ),
                         enabled = !isLoading
                     ) {
-                        if (isLoading) {
+                        if (multiStepFormViewModel.isLoading) {
                             CircularProgressIndicator(
                                 color = Color.White,
                                 modifier = Modifier.size(20.dp)
@@ -281,27 +277,27 @@ fun EmailPasswordStep(viewModel: MultiStepFormViewModel) {
 
 @Composable
 fun RoleStep(viewModel: MultiStepFormViewModel) {
-    // Fetch the selected roles from the ViewModel
     val selectedRoles = viewModel.selectedRoles
 
-    // Display a checkbox for each role
     Column(modifier = Modifier.fillMaxWidth()) {
         RealEstateUserRoles.entries.forEach { role ->
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        viewModel.toggleRoleSelection(role)
-                    }
-                    .padding(8.dp)
-            ) {
-                Checkbox(
-                    checked = selectedRoles.contains(role),
-                    onCheckedChange = { viewModel.toggleRoleSelection(role) }
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(text = role.name, style = MaterialTheme.typography.bodyLarge)
+            if (role != RealEstateUserRoles.ADMIN) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            viewModel.toggleRoleSelection(role)
+                        }
+                        .padding(8.dp)
+                ) {
+                    Checkbox(
+                        checked = selectedRoles.contains(role),
+                        onCheckedChange = { viewModel.toggleRoleSelection(role) }
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = role.name, style = MaterialTheme.typography.bodyLarge)
+                }
             }
         }
     }
@@ -409,75 +405,150 @@ fun ProfilePictureStep(viewModel: MultiStepFormViewModel) {
 }
 
 @Composable
-fun ReviewStep(viewModel: MultiStepFormViewModel, navController: NavController) {
-    val isSuccess = viewModel.isSuccess
+fun ReviewStep(viewModel: MultiStepFormViewModel, navController: NavController, userViewModel: UserViewModel) {
+    val authState = userViewModel.authState.value
     val isLoading = viewModel.isLoading
-    val errorMessage = viewModel.errorMessage
 
-    // Show success message and navigate to login
-    if (isSuccess) {
-        LaunchedEffect(Unit) {
-            // Delay to show the success message
-            delay(2000) // 2 seconds
-            navController.navigate(Screen.Login.route) {
-                popUpTo(Screen.AddProperty.route) { inclusive = true } // Clear back stack
-            }
+    // State to control the visibility of the success/error dialog
+    var showDialog by remember { mutableStateOf(false) }
+
+    // Show dialog when authState changes
+    LaunchedEffect(authState) {
+        if (authState is AuthStatus.Success || authState is AuthStatus.Error) {
+            showDialog = true
         }
-
-        AlertDialog(
-            onDismissRequest = { /* Do nothing */ },
-            title = { Text("Success") },
-            text = { Text("Registration successful!") },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        navController.navigate(Screen.Login.route) {
-                            popUpTo(Screen.AddProperty.route) { inclusive = true }
-                        }
-                    }
-                ) {
-                    Text("OK")
-                }
-            }
-        )
     }
 
-    // Display user details for review
+    // Navigate to login page after successful registration
+    LaunchedEffect(authState) {
+        if (authState is AuthStatus.Success) {
+            delay(2000) // Wait for 2 seconds before navigating
+            navController.navigate(Screen.Login.route) {
+                popUpTo(Screen.AddProperty.route) { inclusive = true }
+            }
+        }
+    }
+
     Column(modifier = Modifier.padding(16.dp)) {
+        // Display user details for review
         Text("Email: ${viewModel.email}")
         Text("First Name: ${viewModel.firstName}")
         Text("Last Name: ${viewModel.lastName}")
         Text("Phone: ${viewModel.phone}")
-        Text("roles selected:${viewModel.selectedRoles}")
+        Text("Roles selected: ${viewModel.selectedRoles}")
         Text("Address: ${viewModel.address.street}, ${viewModel.address.city}, ${viewModel.address.state}, ${viewModel.address.postalCode}, ${viewModel.address.country}")
+
+        // Display the selected profile picture
+        viewModel.profilePicture?.let { uri ->
+            Image(
+                painter = rememberAsyncImagePainter(uri),
+                contentDescription = "Profile Picture",
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(CircleShape)
+            )
+        }
 
         // Submit button
         Button(
             onClick = {
                 viewModel.submitForm(
                     onSuccess = {
-                        // This block will be executed when the registration is successful
-                        viewModel.isSuccess = true // Set success state
+                        // Handle success (navigation is handled in LaunchedEffect)
                     }
                 )
             },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp),
             enabled = !isLoading
         ) {
             if (isLoading) {
-                CircularProgressIndicator(color = Color.White)
+                Text("Signing Up...") // Change text when loading
             } else {
                 Text("Submit")
             }
         }
 
-        // Show error message
-        if (errorMessage != null) {
-            Text(
-                text = errorMessage,
-                color = Color.Red,
-                modifier = Modifier.padding(top = 8.dp)
-            )
+        // Success or Error Dialog
+        if (showDialog) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.5f)) // Semi-transparent background
+                    .clickable { showDialog = false }, // Dismiss dialog on click outside
+                contentAlignment = Alignment.Center
+            ) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        when (authState) {
+                            is AuthStatus.Success -> {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = "Success",
+                                    tint = Color.Green,
+                                    modifier = Modifier.size(48.dp)
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = "Registration Successful!",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Green
+                                )
+                                Text(
+                                    text = "You will be redirected to the login page shortly.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.Gray,
+                                    modifier = Modifier.padding(top = 8.dp)
+                                )
+                            }
+                            is AuthStatus.Error -> {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Error",
+                                    tint = Color.Red,
+                                    modifier = Modifier.size(48.dp)
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = "Registration Failed",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Red
+                                )
+                                Text(
+                                    text = (authState as AuthStatus.Error).message,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.Gray,
+                                    modifier = Modifier.padding(top = 8.dp)
+                                )
+                            }
+                            else -> {}
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = { showDialog = false },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFCB35D5),
+                                contentColor = Color.White
+                            )
+                        ) {
+                            Text("OK")
+                        }
+                    }
+                }
+            }
         }
     }
 }
-
