@@ -14,46 +14,30 @@ class UserViewModel(
     private val repository: UserRepository
 ) : ViewModel() {
 
-    // Auth State
+
+
     private val _authState = mutableStateOf<AuthStatus>(AuthStatus.LoggedOut)
     val authState: State<AuthStatus> get() = _authState
 
-    // User Profile
     private val _userProfile = mutableStateOf<User?>(null)
     val userProfile: State<User?> get() = _userProfile
 
-    // User First Name
+
     private val _userFirstName = mutableStateOf<String?>("User")
     val userFirstName: State<String?> get() = _userFirstName
 
-    // Loading State
+
     private val _isLoading = mutableStateOf(false)
     val isLoading: State<Boolean> get() = _isLoading
 
     init {
-        fetchUserFirstName()
         fetchUserProfile()
     }
 
-    // Fetch the user's first name
-    private fun fetchUserFirstName() {
-        viewModelScope.launch {
-            _isLoading.value = true
-            try {
-                val userId = repository.getCurrentUserId()
-                if (userId != null) {
-                    val userData = repository.getUserById(userId)
-                    _userFirstName.value = userData?.get("firstName")?.toString()?.uppercase()
-                }
-            } catch (e: Exception) {
-                _userFirstName.value = null
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
 
-    // Fetch the user's full profile
+
+
+
     fun fetchUserProfile() {
         viewModelScope.launch {
             _isLoading.value = true
@@ -70,21 +54,25 @@ class UserViewModel(
         }
     }
 
-    // Sign up a new user
+
+
+
     fun signUp(email: String, password: String, userData: Map<String, Any>, imageUri: Uri) {
         viewModelScope.launch {
             _authState.value = AuthStatus.Loading
             try {
-                val success = repository.signUp(email, password, userData,imageUri)
-                _authState.value =
-                    if (success) AuthStatus.Success else AuthStatus.Error("Sign-up failed")
+                val success = repository.signUp(email, password, userData, imageUri)
+                if (success) {
+                    _authState.value = AuthStatus.Success
+                } else {
+                    _authState.value = AuthStatus.Error("Sign-up failed. Please try again.")
+                }
             } catch (e: Exception) {
-                _authState.value = AuthStatus.Error("Sign-up failed: ${e.message}")
+                // Set the exact error message
+                _authState.value = AuthStatus.Error("Sign-up failed: ${e.message ?: "Unknown error"}")
             }
         }
     }
-
-    // Log in an existing user
     fun login(email: String, password: String) {
         viewModelScope.launch {
             _authState.value = AuthStatus.Loading
@@ -101,7 +89,6 @@ class UserViewModel(
         }
     }
 
-    // Log out the current user
     fun logout(context: Context) {
         viewModelScope.launch {
             _authState.value = AuthStatus.Loading
@@ -112,12 +99,39 @@ class UserViewModel(
                 _userFirstName.value = null
             } catch (e: Exception) {
                 _authState.value = AuthStatus.Error("Logout failed: ${e.message}")
+
+            }
+        }
+    }
+
+    fun updateUserProfile(user: User, onComplete: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                val userId = repository.getCurrentUserId()
+                if (userId != null) {
+                    repository.updateUserProfile(userId, user.toMap())
+                    onComplete()
+                }
+            } catch (e: Exception) {
+                println("Failed to update user profile: ${e.message}")
+            }
+        }
+    }
+    fun uploadProfilePicture(imageUri: Uri, onComplete: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val imageUrl = repository.uploadImage(imageUri)
+                if (imageUrl != null) {
+                    onComplete(imageUrl)
+                } else {
+                    println("Failed to upload profile picture")
+                }
+            } catch (e: Exception) {
+                println("Failed to upload profile picture: ${e.message}")
             }
         }
     }
 }
-
-// Sealed class for authentication results
 sealed class AuthStatus {
     object Loading : AuthStatus()
     object Success : AuthStatus()
