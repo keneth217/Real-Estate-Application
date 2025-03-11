@@ -1,23 +1,20 @@
 package com.keneth.realestateapplication.views
 
-import MultiStepFormViewModel
+import com.keneth.realestateapplication.viewModels.MultiStepFormViewModel
 import MyPropertiesScreen
 import android.content.Context
-import android.os.Build
-import androidx.annotation.RequiresApi
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.keneth.realestateapplication.data.PropertyType
 import com.keneth.realestateapplication.viewModels.AddPropertyViewModel
 import com.keneth.realestateapplication.viewModels.PropertyViewModel
 import com.keneth.realestateapplication.viewModels.UserViewModel
@@ -221,6 +218,22 @@ fun NavigationGraph(
                 navController = navController,
                 viewModel,
             )
+        }
+
+        composable(
+            "${Screen.UpdateProfileScreen.route}/{userId}",
+            arguments = listOf(navArgument("userId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId")
+            if (userId != null) {
+                UpdateProfileScreen(
+                    navController, userId,
+                    viewModelUser
+                )
+            } else {
+                // Handle case where userId is null (e.g., show an error message)
+                Text("Error: User ID is missing")
+            }
         }
     }
 }
