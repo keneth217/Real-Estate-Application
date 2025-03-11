@@ -1,3 +1,5 @@
+package com.keneth.realestateapplication.viewModels
+
 import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -5,12 +7,12 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.keneth.realestateapplication.data.LanguagePreference
 import com.keneth.realestateapplication.data.RealEstateUserRoles
-import com.keneth.realestateapplication.data.USerAddress
+import com.keneth.realestateapplication.data.UserAddress
 import com.keneth.realestateapplication.data.User
 import com.keneth.realestateapplication.data.UserPreferences
 import com.keneth.realestateapplication.enum.RegistrationStep
-import com.keneth.realestateapplication.viewModels.UserViewModel
 import java.util.UUID
+
 
 class MultiStepFormViewModel(
     private val userViewModel: UserViewModel
@@ -23,7 +25,7 @@ class MultiStepFormViewModel(
     var firstName by mutableStateOf("")
     var lastName by mutableStateOf("")
     var phone by mutableStateOf("")
-    var address by mutableStateOf(USerAddress())
+    var address by mutableStateOf(UserAddress())
     var profilePicture by mutableStateOf<Uri?>(null)
     var selectedRoles by mutableStateOf(setOf<RealEstateUserRoles>())
     var isEmailVerified by mutableStateOf(false)
@@ -115,6 +117,10 @@ class MultiStepFormViewModel(
         errorMessage = null
 
         try {
+            // Convert Set to List
+            val userRolesList = selectedRoles.toList()
+
+            // Create a User object with all the form data
             val user = User(
                 uuid = UUID.randomUUID().toString(),
                 firstName = firstName,
@@ -122,7 +128,7 @@ class MultiStepFormViewModel(
                 phone = phone,
                 email = email,
                 password = password,
-                userRole = selectedRoles,
+                userRole = userRolesList, // Use List instead of Set
                 profileImage = profilePicture?.toString() ?: "",
                 address = address,
                 isEmailVerified = isEmailVerified,
@@ -134,9 +140,14 @@ class MultiStepFormViewModel(
                 languagePreference = languagePreference
             )
 
+            println("User data to save: ${user.toMap()}")
+
+            // Call the signUp function in UserViewModel
             userViewModel.signUp(email, password, user.toMap(), profilePicture!!)
+
+            // Set success state
             isSuccess = true
-            println("Registration success: $user,$profilePicture",)
+            onSuccess()
         } catch (e: Exception) {
             errorMessage = "Failed to register user: ${e.message}"
             isSuccess = false
@@ -150,7 +161,7 @@ class MultiStepFormViewModel(
                 password.isNotBlank() &&
                 firstName.isNotBlank() &&
                 lastName.isNotBlank() &&
-                phone.isNotBlank() &&
-                profilePicture != null
+                phone.isNotBlank()
+        //profilePicture != null
     }
 }
