@@ -3,7 +3,6 @@ package com.keneth.realestateapplication.repository
 import android.content.ContentValues.TAG
 import android.content.Context
 import android.net.Uri
-import android.service.autofill.UserData
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -11,6 +10,8 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.keneth.realestateapplication.UserPreferences
+import com.keneth.realestateapplication.data.RealEstateUserRoles
+import com.keneth.realestateapplication.data.UserAddress
 import com.keneth.realestateapplication.data.User
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
@@ -26,7 +27,6 @@ class UserRepository(
             imageRef.putFile(imageUri).await()
             imageRef.downloadUrl.await().toString()
         } catch (e: Exception) {
-            println("Error uploading image: ${e.message}")
             null
         }
     }
@@ -38,29 +38,40 @@ class UserRepository(
         imageUri: Uri
     ): Boolean {
         return try {
+            // Step 1: Create user in Firebase Authentication
             val authResult = auth.createUserWithEmailAndPassword(email, password).await()
             val userId = authResult.user?.uid
 
             if (userId != null) {
-                println("User created with ID: $userId")
-                val imageUrl = uploadImage(imageUri)
-                println("Image uploaded, URL: $imageUrl")
+                println("User created in Firebase Authentication with UID: $userId")
 
+                // Step 2: Upload profile picture to Firebase Storage (if provided)
+                val imageUrl = if (imageUri != null) {
+                    uploadImage(imageUri)
+                } else {
+                    null
+                }
+
+                println("Profile picture URL: $imageUrl")
+
+                // Step 3: Save user data to Firestore
                 val updatedUserData = userData.toMutableMap().apply {
                     put("profileImage", imageUrl ?: "")
                 }
-                println("User data to save: $updatedUserData")
 
+                println("User data to save in Firestore: $updatedUserData")
+
+                // Save the user data to Firestore
                 firestore.collection("users").document(userId).set(updatedUserData).await()
                 println("User data saved to Firestore")
-                true
+                true // Return true if everything succeeds
             } else {
                 println("User creation failed: UID is null")
-                false
+                false // Return false if user creation fails
             }
         } catch (e: Exception) {
             println("Sign-up failed: ${e.message}")
-            false
+            throw e // Rethrow the exception to propagate the exact error
         }
     }
 
@@ -128,10 +139,22 @@ class UserRepository(
         }
     }
 
-    // Fetch the full user profile by user ID
     suspend fun getUserProfile(userId: String): User? {
         return try {
             firestore.collection("users").document(userId).get().await().data?.let { userData ->
+                val addressMap = userData["address"] as? Map<String, Any>
+                val userAddress = addressMap?.let { map ->
+                    UserAddress(
+                        street = map["street"] as? String ?: "",
+                        city = map["city"] as? String ?: "",
+                        postalCode = map["postalCode"] as? String ?: "",
+                        country = map["country"] as? String ?: ""
+                    )
+                } ?: UserAddress()
+                val userRolesList =
+                    (userData["userRole"] as? List<String>)?.mapNotNull { roleName ->
+                        RealEstateUserRoles.entries.find { it.name == roleName }
+                    } ?: emptyList()
                 User(
                     uuid = userId,
                     firstName = userData["firstName"] as? String ?: "",
@@ -139,12 +162,14 @@ class UserRepository(
                     phone = userData["phone"] as? String ?: "",
                     email = userData["email"] as? String ?: "",
                     password = userData["password"] as? String ?: "",
-                    profileImage = userData["profileImage"] as? String ?: ""
+                    profileImage = userData["profileImage"] as? String ?: "",
+                    address = userAddress,
+                    userRole = userRolesList // Correctly mapped userRole
                 )
             }
         } catch (e: Exception) {
             println("Failed to fetch user profile: ${e.message}") // Debug print
-            null // Return null if an exception occurs
+            null
         }
     }
 
@@ -165,6 +190,15 @@ class UserRepository(
             println("Token deleted from preferences") // Debug print
         } catch (e: Exception) {
             println("Logout failed: ${e.message}") // Debug print
+        }
+    }
+    suspend fun updateUserProfile(userId: String, userData: Map<String, Any>) {
+        try {
+            firestore.collection("users").document(userId).set(userData).await()
+            println("User profile updated successfully")
+        } catch (e: Exception) {
+            println("Failed to update user profile: ${e.message}")
+            throw e
         }
     }
 }
