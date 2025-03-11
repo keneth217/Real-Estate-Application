@@ -131,12 +131,13 @@ fun UpdateProfileScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Email Field
+
                 OutlinedTextField(
                     value = email,
-                    onValueChange = { email = it },
+                    onValueChange = { },
                     label = { Text("Email") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = false
                 )
 
                 // Address Fields
