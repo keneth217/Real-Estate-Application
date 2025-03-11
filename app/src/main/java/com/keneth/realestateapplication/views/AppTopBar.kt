@@ -20,7 +20,7 @@ import com.keneth.realestateapplication.R
 fun AppTopBar(
     title: String,
     onMenuClick: () -> Unit,
-    backgroundColor: Color = Color(0xFF12F11B) // Default background color (green)
+    backgroundColor: Color = Color(0xFFC11DEC) // Default background color (green)
 ) {
     val toBarFontFamily = FontFamily(
         Font(R.font.chalk_talk, weight = FontWeight.Normal),
