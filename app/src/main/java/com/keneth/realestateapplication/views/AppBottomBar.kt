@@ -19,7 +19,7 @@ fun AppBottomBar(
     items: List<Screen>,
     selectedItem: Int,
     onItemClick: (Int) -> Unit,
-    backgroundColor: Color = Color(0xFF12F11B) // Default background color (green)
+    backgroundColor: Color = Color(0xFFC11DEC) // Default background color (green)
 ) {
     BottomNavigation(
         modifier = Modifier.height(56.dp), // Set a fixed height for the bottom navigation
@@ -37,7 +37,7 @@ fun AppBottomBar(
                 selected = selectedItem == index,
                 onClick = { onItemClick(index) },
                 selectedContentColor = Color.White, // Color for selected item
-                unselectedContentColor = Color.Gray // Color for unselected items
+                unselectedContentColor = Color.Black // Color for unselected items
             )
         }
     }
