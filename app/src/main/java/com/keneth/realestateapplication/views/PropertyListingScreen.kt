@@ -102,11 +102,11 @@ fun PropertyListingScreen(
         topBar = {
             Screen.PropertyListing.title?.let {
                 AppTopBar(
-                    title = it+"$totalListed",
+                    title = it + "$totalListed",
                     onMenuClick = { navController.popBackStack() }
                 )
             }
-        },
+        }, containerColor = Color.White, contentColor = Color.Black,
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 modifier = Modifier
@@ -150,7 +150,7 @@ fun PropertyListingScreen(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
-                    ){
+                    ) {
                         Text(
                             "No properties listed for sale!",
                             modifier = Modifier.padding(16.dp)
@@ -163,7 +163,7 @@ fun PropertyListingScreen(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
-                    ){
+                    ) {
                         Text(
                             "No properties found for : '$searchQuery'!",
                             modifier = Modifier.padding(16.dp)
@@ -203,12 +203,12 @@ fun ListedPropertyCard(
 
             },
         shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.dp, Color.LightGray)
+        border = BorderStroke(1.dp, Color.LightGray), backgroundColor = Color.Gray
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color.White)
+                .background(Color.LightGray)
                 .padding(4.dp),
             verticalAlignment = Alignment.Top,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -216,7 +216,8 @@ fun ListedPropertyCard(
 
 
             SubcomposeAsyncImage(
-                model = property.images.firstOrNull() ?: R.drawable.img_default, // Get first image or default
+                model = property.images.firstOrNull()
+                    ?: R.drawable.img_default, // Get first image or default
                 contentDescription = "Property Image",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
