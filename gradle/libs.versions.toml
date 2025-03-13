@@ -1,6 +1,6 @@
 [versions]
 accompanistSwiperefresh = "0.36.0"
-agp = "8.8.2"
+agp = "8.9.0"
 charts = "0.2.4"
 coilCompose = "3.1.0"
 coilComposeVersion = "2.4.0"
