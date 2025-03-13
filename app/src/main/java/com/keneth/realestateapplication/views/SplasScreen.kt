@@ -98,7 +98,9 @@ fun SplashScreen(navController: NavController, context: Context) {
     if (isCheckingToken) return // Wait for authentication check
 
     // UI Layout
-    Scaffold { paddingValues ->
+    Scaffold(
+        containerColor = Color.White, contentColor = Color.Black,
+    ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
