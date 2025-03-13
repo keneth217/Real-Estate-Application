@@ -44,7 +44,8 @@ android {
 }
 
 dependencies {
-
+//icons
+    implementation ("androidx.compose.material:material-icons-extended:1.5.4")
     //date picker
     implementation ("androidx.compose.material3:material3:1.1.1") // For DatePicker and TimePicker
     implementation ("androidx.compose.material3:material3-window-size-class:1.1.1") // Optional
