@@ -91,7 +91,7 @@ fun LoginScreen(
                     containerColor = if (showErrorSnackbar) Color.Red else Color.Green
                 )
             }
-        }
+        },containerColor = Color.White, contentColor = Color.Black,
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -113,10 +113,11 @@ fun LoginScreen(
                         fontSize = 40.sp,
                         fontFamily = profileFontFamily,
                         fontWeight = FontWeight.Normal,
-                        color = Color.White, letterSpacing = 5.0.sp
+                        color = Color.Green, letterSpacing = 5.0.sp
                     )
 
                 )
+                Spacer(modifier = Modifier.height(50.dp))
 //               sp Spacer(modifier = Modifier.height(16.dp))
 //                Image(
 //                    painter = painterResource(id = R.drawable.img10),
