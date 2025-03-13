@@ -67,7 +67,7 @@ fun PropertyTypeScreen(
                     navController.popBackStack()
                 }
             )
-        },
+        }, containerColor = Color.White, contentColor = Color.Black,
 
         floatingActionButton = {
             ExtendedFloatingActionButton(
