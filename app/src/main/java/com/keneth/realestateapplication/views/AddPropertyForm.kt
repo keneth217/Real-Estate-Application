@@ -82,7 +82,8 @@ fun AddPropertyForm(
                 onMenuClick = { navController.popBackStack() }
             )
         }
-    }) { innerPadding ->
+    }, containerColor = Color.White, contentColor = Color.Black
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
