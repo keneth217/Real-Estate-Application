@@ -110,7 +110,7 @@ fun ListPropertyScreen(
                 title = "List Property",
                 onMenuClick = { navController.popBackStack() }
             )
-        }
+        }, containerColor = Color.White, contentColor = Color.Black,
     ) { paddingValues ->
         Column(
             modifier = Modifier
