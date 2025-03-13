@@ -26,6 +26,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.keneth.realestateapplication.data.RealEstateUserRoles
 import com.keneth.realestateapplication.data.UserAddress
 import com.keneth.realestateapplication.viewModels.UserViewModel
+import androidx.core.net.toUri
 
 @Composable
 fun UpdateProfileScreen(
@@ -36,25 +37,19 @@ fun UpdateProfileScreen(
     val user by viewModelUser.userProfile
     var isLoading by remember { mutableStateOf(false) }
     var profilePictureUri by remember { mutableStateOf<Uri?>(null) }
-
-    // Fetch user profile when the screen is launched
     LaunchedEffect(userId) {
         viewModelUser.fetchUserProfile()
     }
-
-    // Show loading state while fetching data
     if (user == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
         return
     }
-
-    // Prefill form fields with user data
     var firstName by remember { mutableStateOf(user?.firstName ?: "") }
     var lastName by remember { mutableStateOf(user?.lastName ?: "") }
     var phone by remember { mutableStateOf(user?.phone ?: "") }
-    var email by remember { mutableStateOf(user?.email ?: "") }
+    val email by remember { mutableStateOf(user?.email ?: "") }
     var address by remember { mutableStateOf(user?.address ?: UserAddress()) }
 
     // Track selected roles
@@ -72,9 +67,18 @@ fun UpdateProfileScreen(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? -> profilePictureUri = uri }
 
-    Scaffold(topBar = {
-        TopAppBar(title = { Text("Update Profile") })
-    }) { paddingValues ->
+    Scaffold(
+        topBar = {
+            Screen.UpdateProfileScreen.title?.let {
+                AppTopBar(
+                    title = it,
+                    onMenuClick = { navController.popBackStack() }
+                )
+            }
+        }
+
+
+    ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
             Column(
                 modifier = Modifier
@@ -84,7 +88,7 @@ fun UpdateProfileScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Profile Picture Section
-                val imageUri = profilePictureUri ?: user?.profileImage?.let { Uri.parse(it) }
+                val imageUri = profilePictureUri ?: user?.profileImage?.let { it.toUri() }
                 Box(contentAlignment = Alignment.Center) {
                     if (imageUri != null) {
                         Image(
