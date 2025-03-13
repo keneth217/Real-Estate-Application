@@ -72,12 +72,13 @@ fun MultiStepForm(
     val isLoading = userViewModel.isLoading.value
     val isSuccess = multiStepFormViewModel.isSuccess
     val errorMessage = multiStepFormViewModel.errorMessage
-    val authStatus= userViewModel.authState.value
+    val authStatus = userViewModel.authState.value
 
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
-            .padding(10.dp)
+            .padding(10.dp),
+        containerColor = Color.White, contentColor = Color.Black,
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -124,7 +125,11 @@ fun MultiStepForm(
                 RegistrationStep.USER_ROLES -> RoleStep(multiStepFormViewModel)
                 RegistrationStep.ADDRESS -> AddressStep(multiStepFormViewModel)
                 RegistrationStep.PROFILE_PICTURE -> ProfilePictureStep(multiStepFormViewModel)
-                RegistrationStep.REVIEW -> ReviewStep(multiStepFormViewModel, navController,userViewModel)
+                RegistrationStep.REVIEW -> ReviewStep(
+                    multiStepFormViewModel,
+                    navController,
+                    userViewModel
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -250,15 +255,16 @@ fun RegistrationProgress(currentStep: RegistrationStep) {
             strokeCap = StrokeCap.Round
         )
         Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Progress: ${(progress * 100).toInt()}%",
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
+
+            Text(
+                text = "Progress: ${(progress * 100).toInt()}%",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+
     }
 }
-
 @Composable
 fun EmailPasswordStep(viewModel: MultiStepFormViewModel) {
     Column {
@@ -405,7 +411,11 @@ fun ProfilePictureStep(viewModel: MultiStepFormViewModel) {
 }
 
 @Composable
-fun ReviewStep(viewModel: MultiStepFormViewModel, navController: NavController, userViewModel: UserViewModel) {
+fun ReviewStep(
+    viewModel: MultiStepFormViewModel,
+    navController: NavController,
+    userViewModel: UserViewModel
+) {
     val authState = userViewModel.authState.value
     val isLoading = viewModel.isLoading
 
@@ -512,6 +522,7 @@ fun ReviewStep(viewModel: MultiStepFormViewModel, navController: NavController, 
                                     modifier = Modifier.padding(top = 8.dp)
                                 )
                             }
+
                             is AuthStatus.Error -> {
                                 Icon(
                                     imageVector = Icons.Default.Close,
@@ -533,6 +544,7 @@ fun ReviewStep(viewModel: MultiStepFormViewModel, navController: NavController, 
                                     modifier = Modifier.padding(top = 8.dp)
                                 )
                             }
+
                             else -> {}
                         }
                         Spacer(modifier = Modifier.height(16.dp))
