@@ -18,8 +18,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.OutlinedButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -90,18 +93,17 @@ fun ProfileScreen(
                     onMenuClick = { navController.popBackStack() }
                 )
             }
-        }
+        }, containerColor = Color.White, contentColor = Color.Black
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // Gradient Box
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp)
+                    .height(100.dp)
                     .background(
                         brush = Brush.verticalGradient(
                             colors = listOf(Color(0xFF03F603), Color(0xFF7AEE80))
@@ -112,18 +114,14 @@ fun ProfileScreen(
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .offset(y = 50.dp) // Move down by 50dp
+                        .offset(y = 50.dp)
                 ) {
-
-                    // Green Clip Background
                     Box(
                         modifier = Modifier
-                            .size(100.dp) // Same size as the image
+                            .size(100.dp)
                             .clip(CircleShape)
-                            .background(Color.Green) // Green background
+                            .background(Color.Green)
                     )
-
-
                     println("user profile image in profile page :${user.profileImage}")
                     ProfilePicture(
                         profilePicture = profileImage,
@@ -135,10 +133,7 @@ fun ProfileScreen(
                     )
                 }
             }
-
             Spacer(modifier = Modifier.height(50.dp))
-
-            // User Details
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -176,32 +171,38 @@ fun ProfileScreen(
                         color = Color.Gray
                     )
                 }
-
-
                 Spacer(modifier = Modifier.height(30.dp))
                 Button(
                     onClick = {
-                        val userId = user.uuid // Get the current user's ID
+                        val userId = user.uuid
                         if (userId != null) {
                             navController.navigate("${Screen.UpdateProfileScreen.route}/$userId")
                         } else {
-                            // Handle case where userId is null (e.g., show an error message)
                             println("Error: User ID is null")
                         }
                     },
                     modifier = Modifier
-                        .fillMaxWidth(1f)
                         .padding(20.dp)
                         .align(Alignment.CenterHorizontally)
                 ) {
-                    Text(
-                        "Update Details",
-                        style = TextStyle(
-                            color = Color.White
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit Icon",
+                            tint = Color.White
                         )
-                    )
+                        Text(
+                            text = "Update Details",
+                            style = TextStyle(
+                                color = Color.White
+                            )
+                        )
+                    }
                 }
-                // Logout Button
+
                 Button(
                     onClick = { confirmLogout = true },
                     modifier = Modifier
@@ -220,13 +221,13 @@ fun ProfileScreen(
         }
     }
 
-    // Logout Confirmation Dialog
+    // Logout Confirmation Dialo
     if (confirmLogout) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.5f)) // Semi-transparent overlay
-                .clickable { confirmLogout = false }, // Dismiss when clicking outside
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable { confirmLogout = false },
             contentAlignment = Alignment.Center
         ) {
             Card(
@@ -252,14 +253,14 @@ fun ProfileScreen(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Are you sure you want to log out? \nThis will clear your session.",
+                        text = "Are you sure you want to log out?" +
+                                " \nThis will clear your session.",
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center,
                         color = Color.Gray
                     )
 
                     Spacer(modifier = Modifier.height(20.dp))
-
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
@@ -295,7 +296,6 @@ fun ProfileScreen(
 }
 
 
-// Utility function to format the address
 fun formatAddress(address: UserAddress?): String {
     return "${address?.postalCode ?: "N/A"}, " +
             "${address?.street ?: "Unknown Street"}, " +
