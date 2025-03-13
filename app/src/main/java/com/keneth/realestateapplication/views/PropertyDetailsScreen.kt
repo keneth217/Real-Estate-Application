@@ -139,7 +139,7 @@ fun PropertyDetailsScreen(
                     onMenuClick = { navController.popBackStack() }
                 )
             }
-        }
+        }, containerColor = Color.White, contentColor = Color.Black
     ) { paddingValues ->
         if (property != null) {
             Column(
@@ -248,7 +248,8 @@ fun PropertyDetailsScreen(
                 ScrollableTabRow(
                     selectedTabIndex = selectedTabIndex,
                     edgePadding = 0.dp,
-                    contentColor = MaterialTheme.colorScheme.primary
+                    contentColor = Color.Magenta
+
                 ) {
                     tabs.forEachIndexed { index, title ->
                         Tab(
@@ -265,6 +266,7 @@ fun PropertyDetailsScreen(
                         .fillMaxWidth()
                         .weight(1f)
                         .padding(vertical = 8.dp)
+                        .background(Color.White)
                 ) {
                     when (tabs[selectedTabIndex]) {
                         "Basic Details" -> BasicDetailsTab(property)
