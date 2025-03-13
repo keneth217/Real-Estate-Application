@@ -54,7 +54,7 @@ fun TotalsPieChart(
         isAnimationEnable = true,
         chartPadding = 10,
         labelVisible = true,
-       // backgroundColor = Color.White,
+     backgroundColor = Color.White,
         strokeWidth = 20f,
         labelColor = Color.Black,
         isClickOnSliceEnabled = true,
@@ -74,7 +74,7 @@ fun TotalsPieChart(
             .height(500.dp)
             .padding(2.dp)
     ) {
-        Legends(legendsConfig = DataUtils.getLegendsConfigFromPieChartData(pieChartData, 3))
+        Legends(legendsConfig = DataUtils.getLegendsConfigFromPieChartData(pieChartData, 4),)
 
         PieChart(
             modifier = Modifier
