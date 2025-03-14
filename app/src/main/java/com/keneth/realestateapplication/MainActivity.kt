@@ -13,6 +13,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
@@ -54,7 +55,11 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             RealEstateApplicationTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    containerColor = Color.White,
+                    contentColor = Color.Black
+                ) { innerPadding ->
                     NavigationGraph(
                         modifier = Modifier.padding(innerPadding),
                         viewModel = propertyViewModel,
