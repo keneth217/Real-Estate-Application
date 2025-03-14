@@ -113,148 +113,178 @@ fun DashboardScreen(
                 }, currentRoute = currentRoute
             )
         }
-    }) {
-        Scaffold(topBar = {
-            AppTopBar(title = topBarTitle, onMenuClick = { scope.launch { drawerState.open() } })
-        }, bottomBar = {
-            AppBottomBar(items = bottomNavItems,
-                selectedItem = selectedItem,
-                onItemClick = { index ->
-                    selectedItem = index
-                    navController.navigate(bottomNavItems[index].route)
-                })
-        }) { paddingValues ->
+    }
+    ) {
+        Scaffold(
+            topBar = {
+                AppTopBar(
+                    title = topBarTitle,
+                    onMenuClick = { scope.launch { drawerState.open() } }
+                )
+            },
+            containerColor = Color.White,
+            bottomBar = {
+                AppBottomBar(
+                    items = bottomNavItems,
+                    selectedItem = selectedItem,
+                    onItemClick = { index ->
+                        selectedItem = index
+                        navController.navigate(bottomNavItems[index].route)
+                    }
+                )
+            }
+        ) { paddingValues ->
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
             ) {
-                // Green header with user greeting
                 item {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(200.dp)
+                            .height(120.dp)
                             .background(
                                 brush = Brush.verticalGradient(
-                                    colors = listOf(Color(0xFF03F603), Color(0xFF3ACF5F))
+                                    colors = listOf(Color(0xFF14F50C), Color(0xFF7EF19B))
                                 ),
                                 shape = RoundedCornerShape(bottomStart = 10.dp, bottomEnd = 10.dp)
                             )
                     ) {
-                        Column(modifier = Modifier.padding(20.dp)) {
+                        Column(modifier = Modifier.padding(10.dp)) {
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier
+                                    .fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Column {
                                     Text(
-                                        text = "$greeting ,", style = TextStyle(
+                                        text = "$greeting ,",
+                                        style = TextStyle(
                                             fontSize = 24.sp,
-                                          // fontFamily = FontFamily.Cursive,
                                             fontWeight = FontWeight.Normal,
                                             color = Color.White
-                                            //letterSpacing = 5.0.sp
                                         )
                                     )
                                     Spacer(modifier = Modifier.padding(top = 4.dp))
 
                                     Text(
-                                        text = displayName, style = TextStyle(
+                                        text = displayName,
+                                        style = TextStyle(
                                             fontSize = 30.sp,
                                             fontFamily = profileFontFamily,
-                                            fontWeight = FontWeight.Bold,
+                                            fontWeight = FontWeight.Normal,
                                             color = Color.White,
                                             letterSpacing = 2.0.sp
                                         )
                                     )
                                 }
-
                                 ProfilePicture(
                                     profilePicture = profileImage,
                                     profileImage = profileImage.toString(),
                                     modifier = Modifier
-                                        .size(60.dp)
+                                        .size(50.dp)
                                         .clip(CircleShape),
                                     navController = navController
                                 )
-
                             }
-
-                            // Card for total sales
-                            Spacer(modifier = Modifier.padding(top = 16.dp))
-                            Card(
+                        }
+                    }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 10.dp)
+                            .offset(y = (-30).dp)
+                    ) {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(100.dp),
+                            shape = RoundedCornerShape(2.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                        ) {
+                            Box(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(80.dp)
+                                    .fillMaxSize()
                                     .background(color = Color.White),
-                                shape = RoundedCornerShape(8.dp),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                                contentAlignment = Alignment.Center,
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .background(color = Color.White),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Text(
-                                        text = "Sales: $totalSales",
-                                        fontSize = 22.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.Black
-                                    )
-                                }
+                                Text(
+                                    text = "Sales: $totalSales Kshs",
+                                    fontSize = 22.sp,
+                                    fontFamily = FontFamily.Serif,
+                                    fontWeight = FontWeight.Normal,
+                                    color = Color.Black
+                                )
                             }
                         }
                     }
                 }
 
-                // Properties Statistics
                 item {
-                    Text(
-                        text = "Properties Statistics",
-                        fontSize = 26.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .fillMaxWidth()
-                    )
-                }
 
-                // Bar chart for totals
-                item {
-                    TotalsPieChart(
-                        totalProperties = totalProperties,
-                        totalListedProperties = totalListedProperties,
-                        totalSoldProperties = totalSoldProperties,
-                        context = context
-                    )
-                }
-
-                // Property Categories
-                item {
-                    Column(modifier = Modifier.padding(8.dp)) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
                         Text(
-                            text = "Property Categories",
-                            fontSize = 22.sp,
+                            text = "Properties Statistics",
+                            fontSize = 26.sp,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(8.dp)
+                            modifier = Modifier.padding(bottom = 8.dp),
+                            color = Color.Black
                         )
 
-                        if (propertyCategoryLists.isEmpty()) {
-                            Text(
-                                text = "No categories found. Add a new category!",
-                                modifier = Modifier.padding(16.dp)
+
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(400.dp)
+                                .padding(4.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            TotalsPieChart(
+                                totalProperties = totalProperties,
+                                totalListedProperties = totalListedProperties,
+                                totalSoldProperties = totalSoldProperties,
+                                context = context
                             )
-                        } else {
-                            LazyVerticalGrid(
-                                columns = GridCells.Fixed(2),
-                                contentPadding = PaddingValues(16.dp)
-                            ) {
-                                items(propertyCategoryLists) { category ->
-                                    CategoryCard(category.category) {
-                                        navController.navigate("${Screen.PropertyCategories.route}/${category.uuid}")
+                        }
+                    }
+                }
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = "Property Categories",
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
+
+                            if (propertyCategoryLists.isEmpty()) {
+                                Text(
+                                    text = "No categories found. Add a new category!",
+                                    modifier = Modifier.padding(16.dp)
+                                )
+                            } else {
+                                LazyVerticalGrid(
+                                    columns = GridCells.Fixed(2),
+                                    contentPadding = PaddingValues(16.dp)
+                                ) {
+                                    items(propertyCategoryLists) { category ->
+                                        CategoryCard(category.category) {
+                                            navController.navigate("${Screen.PropertyCategories.route}/${category.uuid}")
+                                        }
                                     }
                                 }
                             }
