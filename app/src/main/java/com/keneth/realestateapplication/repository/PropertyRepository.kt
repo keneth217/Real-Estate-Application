@@ -67,8 +67,6 @@ class PropertyRepository(
             false // Failure
         }
     }
-
-    // Get all properties from Firestore
     suspend fun getAllProperties(): List<Property> {
         return try {
             val snapshot = firestore.collection("properties").get().await()
@@ -77,8 +75,6 @@ class PropertyRepository(
             emptyList()
         }
     }
-
-    // Get all listed properties (not sold)
     suspend fun listProperties(): List<Property> {
         return try {
             val snapshot = firestore.collection("properties")
@@ -91,8 +87,6 @@ class PropertyRepository(
             emptyList()
         }
     }
-
-    // Get all sold properties
     suspend fun listSoldProperties(): List<Property> {
         return try {
             val snapshot = firestore.collection("properties")
@@ -104,8 +98,6 @@ class PropertyRepository(
             emptyList()
         }
     }
-
-    // Get the total number of properties
     suspend fun getTotalProperties(): Int {
         return try {
             val snapshot = firestore.collection("properties").get().await()
@@ -114,8 +106,6 @@ class PropertyRepository(
             0
         }
     }
-
-    // Get the total number of sold properties
     suspend fun getTotalSoldProperties(): Int {
         return try {
             val snapshot = firestore.collection("properties")
@@ -127,8 +117,6 @@ class PropertyRepository(
             0
         }
     }
-
-    // Get total sales amount
     suspend fun getTotalSalesAmount(): Double {
         return try {
             val snapshot = firestore.collection("properties")
@@ -140,8 +128,6 @@ class PropertyRepository(
             0.0
         }
     }
-
-    // Get total listed properties (not sold)
     suspend fun getTotalListedProperties(): Int {
         return try {
             val snapshot = firestore.collection("properties")
