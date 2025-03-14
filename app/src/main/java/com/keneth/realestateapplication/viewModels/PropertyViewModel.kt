@@ -103,9 +103,6 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
         fetchPropertyType()
     }
 
-
-
-    // Add a new property
     fun addProperty(property: Property, imageUris: List<Uri>) {
         viewModelScope.launch {
             _isLoadingProperties.value = true
@@ -127,7 +124,6 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
             }
         }
     }
-    // Fetch all properties
     fun fetchAllProperties() {
         viewModelScope.launch {
             _isLoadingProperties.value = true
@@ -141,7 +137,6 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
             }
         }
     }
-    // Fetch listed properties
     fun fetchListedProperties() {
         viewModelScope.launch {
             _isLoadingListedProperties.value = true
@@ -155,7 +150,6 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
             }
         }
     }
-    // Fetch sold properties
     fun fetchSoldProperties() {
         viewModelScope.launch {
             _isLoadingSoldProperties.value = true
@@ -169,7 +163,6 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
             }
         }
     }
-    // Fetch property types
     fun fetchPropertyType() {
         viewModelScope.launch {
             _isLoading.value = true
@@ -182,7 +175,6 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
             }
         }
     }
-    // Add a new property type
     fun addPropertyType(propertyType: PropertyType) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -196,7 +188,6 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
             }
         }
     }
-    // Get total sales amount
     fun fetchTotalSales() {
         viewModelScope.launch {
             _isLoading.value = true
@@ -223,11 +214,10 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
             }
         }
     }
-
     fun makeAppointment(
         propertyId: String,
         appointment: Appointment,
-        onResult: (Boolean, String?) -> Unit // Callback for success/failure
+        onResult: (Boolean, String?) -> Unit
     ) {
         viewModelScope.launch {
             try {
@@ -275,11 +265,6 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
             }
         }
     }
-
-
-
-
-
     fun fetchAllAppointments() {
         viewModelScope.launch {
             _isLoading.value = true
@@ -293,7 +278,6 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
             }
         }
     }
-
     fun fetchAppointmentsForUser(userId: String) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -307,7 +291,6 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
             }
         }
     }
-
     fun fetchAppointmentsForProperty(propertyId: String) {
         viewModelScope.launch {
             _isLoading.value = true
