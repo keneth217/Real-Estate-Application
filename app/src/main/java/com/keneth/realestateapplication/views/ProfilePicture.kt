@@ -65,10 +65,7 @@ fun ProfilePicture(
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
                 loading = {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    CircularProgressIndicator()
                 },
                 error = {
 
