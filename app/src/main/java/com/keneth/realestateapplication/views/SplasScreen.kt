@@ -29,7 +29,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.keneth.realestateapplication.R
 import com.keneth.realestateapplication.UserPreferences
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun SplashScreen(navController: NavController, context: Context) {
     val scope = rememberCoroutineScope()
@@ -59,7 +58,6 @@ fun SplashScreen(navController: NavController, context: Context) {
         )
     )
 
-
     // Auto-scroll pages every 5 seconds
     LaunchedEffect(pagerState) {
         while (true) {
@@ -69,23 +67,23 @@ fun SplashScreen(navController: NavController, context: Context) {
         }
     }
 
-    // Check authentication token
+    // Check authentication token and user role
     LaunchedEffect(Unit) {
         scope.launch {
             val token = UserPreferences.getToken(context)
+            val userRole = UserPreferences.getUserRole(context) // Retrieve user role
             println("Retrieved token from preferences: $token")
+            println("Retrieved user role from preferences: $userRole")
 
             if (token != null) {
                 val isValid = isTokenValidFirebase(token)
                 println("Token validation result: $isValid")
 
-                if (isValid) {
-                    println("Token is valid, navigating to Dashboard")
-                    navController.navigate(Screen.Dashboard.route) {
-                        popUpTo(Screen.Splash.route) { inclusive = true }
-                    }
+                if (isValid && userRole != null) {
+                    println("Token is valid, navigating to role-specific screen")
+                    navigateToRoleScreen(navController, userRole) // Navigate based on role
                 } else {
-                    println("Token is invalid, showing onboarding")
+                    println("Token is invalid or role is missing, showing onboarding")
                     isCheckingToken = false
                 }
             } else {
@@ -162,9 +160,7 @@ fun SplashScreen(navController: NavController, context: Context) {
                                 popUpTo(Screen.Splash.route) { inclusive = true }
                             }
                         },
-
-                        modifier = Modifier
-                            .padding(bottom = 32.dp),
+                        modifier = Modifier.padding(bottom = 32.dp),
                         shape = RoundedCornerShape(4.dp), // Rounded corners
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF5CEC57), // Green background
@@ -184,6 +180,29 @@ fun SplashScreen(navController: NavController, context: Context) {
     }
 }
 
+// Navigate to the appropriate screen based on the user's role
+private fun navigateToRoleScreen(navController: NavController, userRole: String) {
+    println("Retrieved user role from preferences: $userRole") // Log the raw role
+
+    val cleanedRole = userRole.replace("[", "").replace("]", "").uppercase()
+    println("Cleaned user role: $cleanedRole") // Log the cleaned role
+    println("Navigating to role-specific screen for role: $cleanedRole")
+
+    when (cleanedRole) { // Use cleanedRole instead of userRole
+        "ADMIN" -> navController.navigate(Screen.Dashboard.route)
+        "AGENT" -> navController.navigate(Screen.AgentDashboard.route)
+        "BUYER" -> navController.navigate(Screen.BuyerDashboard.route)
+        "SELLER" -> navController.navigate(Screen.SellerDashboard.route)
+        "LANDLORD" -> navController.navigate(Screen.LandLordDashboard.route)
+        "TENANT" -> navController.navigate(Screen.TenantDashboard.route)
+        "GUEST" -> navController.navigate(Screen.GuestDashboard.route)
+        else -> {
+            println("Unknown role: $cleanedRole, navigating to Login")
+            navController.navigate(Screen.Login.route) // Default fallback
+        }
+    }
+}
+
 
 suspend fun isTokenValidFirebase(token: String): Boolean {
     return try {
@@ -196,7 +215,6 @@ suspend fun isTokenValidFirebase(token: String): Boolean {
         false
     }
 }
-
 
 @Composable
 fun SplashPageUI(splashPage: SplashPage) {
@@ -243,4 +261,3 @@ fun Indicator(isSelected: Boolean) {
 }
 
 data class SplashPage(val imageRes: Int, val title: String, val desc: String)
-
