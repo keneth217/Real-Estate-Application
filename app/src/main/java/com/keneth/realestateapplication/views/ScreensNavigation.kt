@@ -1,9 +1,11 @@
 package com.keneth.realestateapplication.views
 
+import androidx.compose.ui.graphics.vector.ImageVector
+
 sealed class Screen(
     val route: String,
     val title: String? = null,
-    open val icon: Int? = null
+    open val icon: ImageVector? = null
 ) {
     // Authentication Screens
     object Splash : Screen("splash", "Splash")
@@ -19,6 +21,14 @@ sealed class Screen(
     }
 
 
+    object TenantDashboard : Screen("tenant dashboard", "DashBoard")
+    object SellerDashboard : Screen("seller dashboard", "DashBoard")
+    object BuyerDashboard : Screen("buyer dashboard", "DashBoard")
+    object GuestDashboard : Screen("guest dashboard", "DashBoard")
+    object LandLordDashboard : Screen("landlord dashboard", "DashBoard")
+    object AgentDashboard : Screen("agent dashboard", "DashBoard")
+
+
     object AddProperty : Screen("addProperty", "Add Property")
     object Favorites : Screen("favorites", "Favorites")
     object Notifications : Screen("notifications", "Notifications")
@@ -26,6 +36,11 @@ sealed class Screen(
     object Settings : Screen("settings", "Settings")
 
     object UpdateProfileScreen : Screen("updateProfile", "Update Profile")
+    object UsersManagementScreen : Screen("userLists", "Users Lists")
+
+    object UserDetails : Screen("userDetails/{userId}", "User Details") {
+        fun createRoute(userId: String) = "userDetails/$userId"
+    }
 
     // Property Management Screens
     object PropertyCategories : Screen("propertyCategories", "Property Categories")
@@ -56,9 +71,11 @@ sealed class Screen(
     object ListPropertyScreen : Screen("listProperty/{propertyId}", "List Property") {
         fun createRoute(propertyId: String) = "listProperty/$propertyId"
     }
+
     object MakeAppointmentScreen : Screen("makeAppointment/{propertyId}", "Make Appointment") {
         fun createRoute(propertyId: String) = "makeAppointment/$propertyId"
     }
+
     object SellPropertyScreen : Screen("sellProperty/{propertyId}", "Sell Property") {
         fun createRoute(propertyId: String) = "sellProperty/$propertyId"
     }
