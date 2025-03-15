@@ -10,6 +10,7 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.keneth.realestateapplication.UserPreferences
+import com.keneth.realestateapplication.data.Property
 import com.keneth.realestateapplication.data.RealEstateUserRoles
 import com.keneth.realestateapplication.data.UserAddress
 import com.keneth.realestateapplication.data.User
@@ -30,7 +31,6 @@ class UserRepository(
             null
         }
     }
-
     suspend fun signUp(
         email: String,
         password: String,
@@ -38,44 +38,49 @@ class UserRepository(
         imageUri: Uri
     ): Boolean {
         return try {
+            println("UserRepository, Starting sign-up process")
+
             // Step 1: Create user in Firebase Authentication
+            println("UserRepository, Creating user in Firebase Authentication")
             val authResult = auth.createUserWithEmailAndPassword(email, password).await()
             val userId = authResult.user?.uid
 
             if (userId != null) {
-                println("User created in Firebase Authentication with UID: $userId")
+                Log.d("UserRepository", "User created in Firebase Authentication with UID: $userId")
 
                 // Step 2: Upload profile picture to Firebase Storage (if provided)
                 val imageUrl = if (imageUri != null) {
+                    Log.d("UserRepository", "Uploading profile picture to Firebase Storage")
                     uploadImage(imageUri)
                 } else {
+                    Log.d("UserRepository", "No profile picture provided")
                     null
                 }
 
-                println("Profile picture URL: $imageUrl")
+                Log.d("UserRepository", "Profile picture URL: $imageUrl")
 
                 // Step 3: Save user data to Firestore
                 val updatedUserData = userData.toMutableMap().apply {
                     put("profileImage", imageUrl ?: "")
                 }
 
-                println("User data to save in Firestore: $updatedUserData")
+                println("UserRepository, User data to save in Firestore: $updatedUserData")
 
                 // Save the user data to Firestore
+                Log.d("UserRepository", "Saving user data to Firestore")
                 firestore.collection("users").document(userId).set(updatedUserData).await()
-                println("User data saved to Firestore")
+                Log.d("UserRepository", "User data saved to Firestore")
+
                 true // Return true if everything succeeds
             } else {
-                println("User creation failed: UID is null")
+                Log.e("UserRepository", "User creation failed: UID is null")
                 false // Return false if user creation fails
             }
         } catch (e: Exception) {
-            println("Sign-up failed: ${e.message}")
-            throw e // Rethrow the exception to propagate the exact error
+            Log.e("UserRepository", "Sign-up failed: ${e.message}", e)
+            throw e
         }
     }
-
-    // Log in an existing user with email and password
     suspend fun login(email: String, password: String): Map<String, Any>? {
         return try {
             // Sign in with email and password
@@ -105,7 +110,6 @@ class UserRepository(
             null // Return null if an exception occurs
         }
     }
-
     suspend fun logInWithGoogle(idToken: String): FirebaseUser? {
         return try {
             // Create the Google credential
@@ -128,17 +132,6 @@ class UserRepository(
             null
         }
     }
-
-    // Fetch user data by user ID
-    suspend fun getUserById(userId: String): Map<String, Any>? {
-        return try {
-            firestore.collection("users").document(userId).get().await().data
-        } catch (e: Exception) {
-            println("Failed to fetch user by ID: ${e.message}") // Debug print
-            null // Return null if an exception occurs
-        }
-    }
-
     suspend fun getUserProfile(userId: String): User? {
         return try {
             firestore.collection("users").document(userId).get().await().data?.let { userData ->
@@ -172,13 +165,9 @@ class UserRepository(
             null
         }
     }
-
-    // Get the current user's ID
     fun getCurrentUserId(): String? {
         return auth.currentUser?.uid
     }
-
-    // Log out the current user
     suspend fun logout(context: Context) {
         try {
             // Sign out from Firebase Authentication
@@ -187,7 +176,10 @@ class UserRepository(
 
             // Clear stored token from preferences
             UserPreferences.deleteToken(context)
-            println("Token deleted from preferences") // Debug print
+            println("Token deleted from preferences")
+
+            UserPreferences.deleteUserRole(context)
+            println("User Role deleted from preferences")
         } catch (e: Exception) {
             println("Logout failed: ${e.message}") // Debug print
         }
@@ -199,6 +191,44 @@ class UserRepository(
         } catch (e: Exception) {
             println("Failed to update user profile: ${e.message}")
             throw e
+        }
+    }
+    suspend fun getAllUsers(): List<User> {
+        return try {
+
+            val snapshot = firestore.collection("users").get().await()
+            snapshot.documents.mapNotNull { document ->
+                try {
+                    document.toObject(User::class.java)?.apply {
+                        println("user fetch success")
+                    }
+                } catch (e: Exception) {
+                    println("UserRepository, Error mapping document to User: ${e.message}")
+                    null
+                }
+            }
+        } catch (e: Exception) {
+            // Log Firestore fetch errors
+            println("UserRepository, Error fetching users: ${e.message}")
+            emptyList() // Return an empty list in case of an error
+        }
+    }
+    suspend fun getTotalUsers(): Int {
+        return try {
+            val snapshot = firestore.collection("users").get().await()
+            snapshot.size()
+        } catch (e: Exception) {
+            0
+        }
+    }
+
+    suspend fun getUserById(userId: String): User? {
+        return try {
+            val snapshot = firestore.collection("users").document(userId).get().await()
+            snapshot.toObject(User::class.java)
+        } catch (e: Exception) {
+            println("Error fetching User by ID: ${e.message}")
+            null
         }
     }
 }
