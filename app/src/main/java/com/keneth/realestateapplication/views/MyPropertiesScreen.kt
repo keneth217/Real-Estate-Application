@@ -64,7 +64,7 @@ fun MyPropertiesScreen(navController: NavHostController, viewModel: PropertyView
                     onMenuClick = { navController.popBackStack() }
                 )
             }
-        },
+        }, containerColor = Color.White,
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 modifier = Modifier
@@ -85,7 +85,7 @@ fun MyPropertiesScreen(navController: NavHostController, viewModel: PropertyView
             ScrollableTabRow(
                 selectedTabIndex = selectedTabIndex,
                 edgePadding = 0.dp,
-              //  backgroundColor = Color.White,
+               containerColor = Color.White,
                 contentColor = Color.Black,
                 modifier = Modifier.fillMaxWidth()
             ) {
