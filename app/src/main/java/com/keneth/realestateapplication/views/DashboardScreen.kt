@@ -99,21 +99,36 @@ fun DashboardScreen(
     if (welcome != null) {
         println("display ${welcome.lastName}")
     }
-
+    val drawerItems = listOf(
+        Screen.TenantDashboard,
+        Screen.SellerDashboard,
+        Screen.BuyerDashboard,
+        Screen.GuestDashboard,
+        Screen.LandLordDashboard,
+        Screen.AgentDashboard
+    )
     val bottomNavItems = listOf(
         Screen.MyProperties, Screen.PropertyListing, Screen.Reports, Screen.Settings
     )
-
-    ModalNavigationDrawer(drawerState = drawerState, drawerContent = {
-        ModalDrawerSheet {
-            AppDrawer(
-                drawerState = drawerState, scope = scope, onItemClick = { route ->
-                    navController.navigate(route)
-                    scope.launch { drawerState.close() }
-                }, currentRoute = currentRoute
-            )
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet {
+                AppDrawer(
+                    drawerState = drawerState,
+                    scope = scope,
+                    onItemClick = { route ->
+                        navController.navigate(route) {
+                            launchSingleTop = true
+                        }
+                        scope.launch { drawerState.close() }
+                    },
+                    onBackClick = { navController.popBackStack() },
+                    currentRoute = currentRoute,
+                    drawerItems = drawerItems
+                )
+            }
         }
-    }
     ) {
         Scaffold(
             topBar = {
