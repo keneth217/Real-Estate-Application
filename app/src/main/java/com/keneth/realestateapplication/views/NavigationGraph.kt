@@ -108,6 +108,18 @@ fun NavigationGraph(
             )
         }
 
+        composable(
+            route = Screen.UserDetails.route,
+            arguments = listOf(navArgument("userId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId") ?: ""
+            UserDetailsScreen(
+                userId = userId,
+                navController = navController,
+                userViewModel = viewModelUser,
+            )
+        }
+
         composable(Screen.Favorites.route) {
             FavoritesScreen(navController = navController, viewModel)
         }
@@ -149,6 +161,10 @@ fun NavigationGraph(
         }
         composable(Screen.Inquiries.route) {
             InquiriesScreen(navController = navController, viewModel)
+        }
+
+        composable(Screen.UsersManagementScreen.route) {
+            UsersManagementScreen(navController = navController, viewModelUser)
         }
         composable(Screen.Appointments.route) { backStackEntry ->
             val propertyId = backStackEntry.arguments?.getString("propertyId")
@@ -234,6 +250,25 @@ fun NavigationGraph(
                 // Handle case where userId is null (e.g., show an error message)
                 Text("Error: User ID is missing")
             }
+        }
+        composable(Screen.BuyerDashboard.route) {
+            BuyerDashboardScreen(navController = navController)
+        }
+        composable(Screen.SellerDashboard.route) {
+            SelleDashboardScreen(navController = navController)
+        }
+        composable(Screen.AgentDashboard.route) {
+            AgentDashboardScreen(navController = navController, viewModelUser)
+        }
+        composable(Screen.LandLordDashboard.route) {
+            LandLordDashboardScreen(navController = navController,viewModelUser)
+        }
+        composable(Screen.GuestDashboard.route) {
+            GuestDashboardScreen(navController = navController)
+        }
+
+        composable(Screen.TenantDashboard.route) {
+            TenantDashboardScreen(navController = navController, viewModelUser)
         }
     }
 }
