@@ -2,10 +2,13 @@ package com.keneth.realestateapplication.viewModels
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.keneth.realestateapplication.data.Property
 import com.keneth.realestateapplication.data.User
 import com.keneth.realestateapplication.repository.UserRepository
 import kotlinx.coroutines.launch
@@ -13,7 +16,6 @@ import kotlinx.coroutines.launch
 class UserViewModel(
     private val repository: UserRepository
 ) : ViewModel() {
-
 
 
     private val _authState = mutableStateOf<AuthStatus>(AuthStatus.LoggedOut)
@@ -30,13 +32,19 @@ class UserViewModel(
     private val _isLoading = mutableStateOf(false)
     val isLoading: State<Boolean> get() = _isLoading
 
+    private val _errorMessage = mutableStateOf("")
+    val errorMessage: State<String> get() = _errorMessage
+
+    private val _usersLists = mutableStateOf<List<User>>(emptyList())
+    val usersLists: State<List<User>> get() = _usersLists
+    private val _totalUsers = mutableIntStateOf(0)
+    val totalUsers: State<Int> get() = _totalUsers
+    private val _userDetails = mutableStateOf<User?>(null)
+    val userDetailsDetails: State<User?> get() = _userDetails
     init {
         fetchUserProfile()
+        fetchAllUsers()
     }
-
-
-
-
 
     fun fetchUserProfile() {
         viewModelScope.launch {
@@ -54,22 +62,26 @@ class UserViewModel(
         }
     }
 
-
-
-
     fun signUp(email: String, password: String, userData: Map<String, Any>, imageUri: Uri) {
         viewModelScope.launch {
             _authState.value = AuthStatus.Loading
+            Log.d("UserViewModel", "Starting sign-up process")
+
             try {
+                Log.d("UserViewModel", "Calling signUp in UserRepository")
                 val success = repository.signUp(email, password, userData, imageUri)
+
                 if (success) {
+                    Log.d("UserViewModel", "Sign-up successful")
                     _authState.value = AuthStatus.Success
                 } else {
+                    Log.e("UserViewModel", "Sign-up failed: Repository returned false")
                     _authState.value = AuthStatus.Error("Sign-up failed. Please try again.")
                 }
             } catch (e: Exception) {
-                // Set the exact error message
-                _authState.value = AuthStatus.Error("Sign-up failed: ${e.message ?: "Unknown error"}")
+                Log.e("UserViewModel", "Sign-up failed: ${e.message}", e)
+                _authState.value =
+                    AuthStatus.Error("Sign-up failed: ${e.message ?: "Unknown error"}")
             }
         }
     }
@@ -88,7 +100,6 @@ class UserViewModel(
             }
         }
     }
-
     fun logout(context: Context) {
         viewModelScope.launch {
             _authState.value = AuthStatus.Loading
@@ -103,7 +114,6 @@ class UserViewModel(
             }
         }
     }
-
     fun updateUserProfile(user: User, onComplete: () -> Unit) {
         viewModelScope.launch {
             try {
@@ -128,6 +138,34 @@ class UserViewModel(
                 }
             } catch (e: Exception) {
                 println("Failed to upload profile picture: ${e.message}")
+            }
+        }
+    }
+    fun fetchAllUsers() {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                _usersLists.value = repository.getAllUsers()
+                _totalUsers.intValue = repository.getTotalUsers()
+                println("userlist success")
+            } catch (e: Exception) {
+                _errorMessage.value = "Error fetching users: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun fetchUserById(userId: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                _userDetails.value = repository.getUserById(userId)
+            } catch (e: Exception) {
+                _errorMessage.value = "Error fetching user: ${e.message}"
+                println("Error fetching user details: ${e.message}")
+            } finally {
+                _isLoading.value = false
             }
         }
     }
