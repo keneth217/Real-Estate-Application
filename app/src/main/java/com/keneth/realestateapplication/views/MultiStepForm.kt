@@ -69,16 +69,32 @@ fun MultiStepForm(
     multiStepFormViewModel: MultiStepFormViewModel
 ) {
     val currentStep = multiStepFormViewModel.currentStep
-    val isLoading = userViewModel.isLoading.value
-    val isSuccess = multiStepFormViewModel.isSuccess
-    val errorMessage = multiStepFormViewModel.errorMessage
-    val authStatus = userViewModel.authState.value
+    val authState = userViewModel.authState.value
+
+    // State to control the visibility of the success/error dialog
+    var showDialog by remember { mutableStateOf(false) }
+
+    // Show dialog when authState changes to Success or Error
+    LaunchedEffect(authState) {
+        if (authState is AuthStatus.Success || authState is AuthStatus.Error) {
+            showDialog = true
+        }
+    }
+
+    // Navigate to login page after successful registration
+    LaunchedEffect(authState) {
+        if (authState is AuthStatus.Success) {
+            delay(2000) // Wait for 2 seconds before navigating
+            navController.navigate(Screen.Login.route) {
+                popUpTo(Screen.AddProperty.route) { inclusive = true }
+            }
+        }
+    }
 
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
             .padding(10.dp),
-        containerColor = Color.White, contentColor = Color.Black,
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -125,11 +141,7 @@ fun MultiStepForm(
                 RegistrationStep.USER_ROLES -> RoleStep(multiStepFormViewModel)
                 RegistrationStep.ADDRESS -> AddressStep(multiStepFormViewModel)
                 RegistrationStep.PROFILE_PICTURE -> ProfilePictureStep(multiStepFormViewModel)
-                RegistrationStep.REVIEW -> ReviewStep(
-                    multiStepFormViewModel,
-                    navController,
-                    userViewModel
-                )
+                RegistrationStep.REVIEW -> ReviewStep(multiStepFormViewModel)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -161,7 +173,7 @@ fun MultiStepForm(
                         onClick = {
                             multiStepFormViewModel.submitForm(
                                 onSuccess = {
-                                    multiStepFormViewModel.isSuccess = true
+                                    // No need to set isSuccess here; authState will handle it
                                 }
                             )
                         },
@@ -175,13 +187,20 @@ fun MultiStepForm(
                             defaultElevation = 6.dp,
                             pressedElevation = 2.dp
                         ),
-                        enabled = !isLoading
+                        enabled = authState != AuthStatus.Loading // Disable button during loading
                     ) {
-                        if (multiStepFormViewModel.isLoading) {
-                            CircularProgressIndicator(
-                                color = Color.White,
-                                modifier = Modifier.size(20.dp)
-                            )
+                        if (authState == AuthStatus.Loading) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                CircularProgressIndicator(
+                                    color = Color.White,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Signing up...")
+                            }
                         } else {
                             Text("Submit")
                         }
@@ -229,6 +248,89 @@ fun MultiStepForm(
             }
         }
     }
+
+    // Show dialog based on authState
+    if (showDialog) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f)) // Semi-transparent background
+                .clickable { showDialog = false }, // Dismiss dialog on click outside
+            contentAlignment = Alignment.Center
+        ) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                shape = RoundedCornerShape(8.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    when (authState) {
+                        is AuthStatus.Success -> {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = "Success",
+                                tint = Color.Green,
+                                modifier = Modifier.size(48.dp)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "Registration Successful!",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Green
+                            )
+                            Text(
+                                text = "You will be redirected to the login page shortly.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.Gray,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
+
+                        is AuthStatus.Error -> {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Error",
+                                tint = Color.Red,
+                                modifier = Modifier.size(48.dp)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "Registration Failed",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Red
+                            )
+                            Text(
+                                text = (authState as AuthStatus.Error).message,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.Gray,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
+
+                        else -> {}
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = { showDialog = false },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFCB35D5),
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text("OK")
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -256,15 +358,16 @@ fun RegistrationProgress(currentStep: RegistrationStep) {
         )
         Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = "Progress: ${(progress * 100).toInt()}%",
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
+        Text(
+            text = "Progress: ${(progress * 100).toInt()}%",
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black
+        )
 
     }
 }
+
 @Composable
 fun EmailPasswordStep(viewModel: MultiStepFormViewModel) {
     Column {
@@ -293,13 +396,13 @@ fun RoleStep(viewModel: MultiStepFormViewModel) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
-                            viewModel.toggleRoleSelection(role)
+                            viewModel.selectRole(role)
                         }
                         .padding(8.dp)
                 ) {
                     Checkbox(
                         checked = selectedRoles.contains(role),
-                        onCheckedChange = { viewModel.toggleRoleSelection(role) }
+                        onCheckedChange = { viewModel.selectRole(role) }
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(text = role.name, style = MaterialTheme.typography.bodyLarge)
@@ -365,7 +468,7 @@ fun AddressStep(viewModel: MultiStepFormViewModel) {
             value = viewModel.address.country,
             onValueChange = { viewModel.address = viewModel.address.copy(country = it) },
             label = { Text("Country") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }
@@ -413,31 +516,8 @@ fun ProfilePictureStep(viewModel: MultiStepFormViewModel) {
 @Composable
 fun ReviewStep(
     viewModel: MultiStepFormViewModel,
-    navController: NavController,
-    userViewModel: UserViewModel
 ) {
-    val authState = userViewModel.authState.value
-    val isLoading = viewModel.isLoading
 
-    // State to control the visibility of the success/error dialog
-    var showDialog by remember { mutableStateOf(false) }
-
-    // Show dialog when authState changes
-    LaunchedEffect(authState) {
-        if (authState is AuthStatus.Success || authState is AuthStatus.Error) {
-            showDialog = true
-        }
-    }
-
-    // Navigate to login page after successful registration
-    LaunchedEffect(authState) {
-        if (authState is AuthStatus.Success) {
-            delay(2000) // Wait for 2 seconds before navigating
-            navController.navigate(Screen.Login.route) {
-                popUpTo(Screen.AddProperty.route) { inclusive = true }
-            }
-        }
-    }
 
     Column(modifier = Modifier.padding(16.dp)) {
         // Display user details for review
@@ -457,110 +537,6 @@ fun ReviewStep(
                     .size(100.dp)
                     .clip(CircleShape)
             )
-        }
-
-        // Submit button
-        Button(
-            onClick = {
-                viewModel.submitForm(
-                    onSuccess = {
-                        // Handle success (navigation is handled in LaunchedEffect)
-                    }
-                )
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp),
-            enabled = !isLoading
-        ) {
-            if (isLoading) {
-                Text("Signing Up...") // Change text when loading
-            } else {
-                Text("Submit")
-            }
-        }
-
-        // Success or Error Dialog
-        if (showDialog) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.5f)) // Semi-transparent background
-                    .clickable { showDialog = false }, // Dismiss dialog on click outside
-                contentAlignment = Alignment.Center
-            ) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        when (authState) {
-                            is AuthStatus.Success -> {
-                                Icon(
-                                    imageVector = Icons.Default.Check,
-                                    contentDescription = "Success",
-                                    tint = Color.Green,
-                                    modifier = Modifier.size(48.dp)
-                                )
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Text(
-                                    text = "Registration Successful!",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.Green
-                                )
-                                Text(
-                                    text = "You will be redirected to the login page shortly.",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = Color.Gray,
-                                    modifier = Modifier.padding(top = 8.dp)
-                                )
-                            }
-
-                            is AuthStatus.Error -> {
-                                Icon(
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = "Error",
-                                    tint = Color.Red,
-                                    modifier = Modifier.size(48.dp)
-                                )
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Text(
-                                    text = "Registration Failed",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.Red
-                                )
-                                Text(
-                                    text = (authState as AuthStatus.Error).message,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = Color.Gray,
-                                    modifier = Modifier.padding(top = 8.dp)
-                                )
-                            }
-
-                            else -> {}
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Button(
-                            onClick = { showDialog = false },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFCB35D5),
-                                contentColor = Color.White
-                            )
-                        ) {
-                            Text("OK")
-                        }
-                    }
-                }
-            }
         }
     }
 }
