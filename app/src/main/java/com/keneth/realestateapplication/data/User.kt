@@ -5,19 +5,39 @@ data class User(
     val firstName: String = "",
     val lastName: String = "",
     val phone: String = "",
-    val email: String = "", // User's email address
-    val password: String = "", // User's password (should be hashed in production)
-    val userRole: List<RealEstateUserRoles>,// User's role (default: GUEST)
-    val profileImage: String = "", // URL to the user's profile image
-    val address: UserAddress = UserAddress(), // User's address
-    val isEmailVerified: Boolean = false, // Whether the user's email is verified
-    val isPhoneVerified: Boolean = false, // Whether the user's phone is verified
-    val createdAt: Long = System.currentTimeMillis(), // Timestamp when the user was created
-    val updatedAt: Long = System.currentTimeMillis(), // Timestamp when the user was last updated
-    val preferences: UserPreferences = UserPreferences(), // User preferences
-    val favorites: List<String> = emptyList(),// List of favorite property UUIDs
+    val email: String = "",
+    val password: String = "",
+    val userRole: List<RealEstateUserRoles> = emptyList(),
+    val profileImage: String = "",
+    val address: UserAddress = UserAddress(),
+    val isEmailVerified: Boolean = false,
+    val isPhoneVerified: Boolean = false,
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis(),
+    val preferences: UserPreferences = UserPreferences(),
+    val favorites: List<String> = emptyList(),
     val languagePreference: LanguagePreference = LanguagePreference.ENGLISH
-){
+) {
+    // Secondary constructor with no arguments
+    constructor() : this(
+        uuid = "",
+        firstName = "",
+        lastName = "",
+        phone = "",
+        email = "",
+        password = "",
+        userRole = emptyList(),
+        profileImage = "",
+        address = UserAddress(),
+        isEmailVerified = false,
+        isPhoneVerified = false,
+        createdAt = System.currentTimeMillis(),
+        updatedAt = System.currentTimeMillis(),
+        preferences = UserPreferences(),
+        favorites = emptyList(),
+        languagePreference = LanguagePreference.ENGLISH
+    )
+
     fun toMap(): Map<String, Any> {
         return mapOf(
             "uuid" to uuid,
@@ -26,7 +46,7 @@ data class User(
             "phone" to phone,
             "email" to email,
             "password" to password,
-            "userRole" to userRole.map { it.name }, // Convert roles to a list of strings
+            "userRole" to userRole.map { it.name },
             "profileImage" to profileImage,
             "address" to mapOf(
                 "street" to address.street,
@@ -54,8 +74,9 @@ data class User(
     }
 }
 
+
 enum class LanguagePreference {
-    ENGLISH, KISWAHILI,FRENCH
+    ENGLISH, KISWAHILI, FRENCH
 }
 
 // Address data class for user location
