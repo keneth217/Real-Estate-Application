@@ -124,6 +124,7 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
             }
         }
     }
+
     fun fetchAllProperties() {
         viewModelScope.launch {
             _isLoadingProperties.value = true
@@ -137,6 +138,7 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
             }
         }
     }
+
     fun fetchListedProperties() {
         viewModelScope.launch {
             _isLoadingListedProperties.value = true
@@ -150,6 +152,7 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
             }
         }
     }
+
     fun fetchSoldProperties() {
         viewModelScope.launch {
             _isLoadingSoldProperties.value = true
@@ -163,6 +166,7 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
             }
         }
     }
+
     fun fetchPropertyType() {
         viewModelScope.launch {
             _isLoading.value = true
@@ -175,6 +179,7 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
             }
         }
     }
+
     fun addPropertyType(propertyType: PropertyType) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -188,6 +193,7 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
             }
         }
     }
+
     fun fetchTotalSales() {
         viewModelScope.launch {
             _isLoading.value = true
@@ -201,6 +207,7 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
             }
         }
     }
+
     fun fetchPropertyById(propertyId: String) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -214,6 +221,7 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
             }
         }
     }
+
     fun makeAppointment(
         propertyId: String,
         appointment: Appointment,
@@ -234,7 +242,8 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
             }
         }
     }
-    fun listProperty(propertyId:String) {
+
+    fun listProperty(propertyId: String) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
@@ -248,6 +257,7 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
         }
 
     }
+
     fun sellProperty(propertyId: String) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -265,6 +275,7 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
             }
         }
     }
+
     fun fetchAllAppointments() {
         viewModelScope.launch {
             _isLoading.value = true
@@ -278,6 +289,7 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
             }
         }
     }
+
     fun fetchAppointmentsForUser(userId: String) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -291,6 +303,7 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
             }
         }
     }
+
     fun fetchAppointmentsForProperty(propertyId: String) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -299,6 +312,20 @@ class PropertyViewModel(private val repository: PropertyRepository) : ViewModel(
                 _propertyAppointments.value = appointments
             } catch (e: Exception) {
                 _errorMessage.value = "Failed to fetch property appointments: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun fetchPropertiesByUserId(userId: String) {
+        _isLoadingProperties.value = true
+        viewModelScope.launch {
+            try {
+                val properties = repository.getPropertiesByUserId(userId)
+                _propertyLists.value = properties
+            } catch (e: Exception) {
+                _errorMessage.value = "Failed to fetch user appointments: ${e.message}"
             } finally {
                 _isLoading.value = false
             }
