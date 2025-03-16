@@ -21,8 +21,9 @@ data class Property(
     val listingDate: Long = 0L, // Listing date in milliseconds (epoch time)
     val updatedDate: Long = 0L, // Last updated date in milliseconds
     val amenities: Amenities = Amenities(), // List of amenities (e.g., Pool, Gym, Parking)
-    val contactInfo: ContactInfo = ContactInfo() ,// Contact information for the property
-    val appointments: List<Appointment> = emptyList() // List of appointments
+    val contactInfo: ContactInfo = ContactInfo(),// Contact information for the property
+    val appointments: List<Appointment> = emptyList(), // List of appointments
+    val userId: String = ""
 )
 
 data class Amenities(
