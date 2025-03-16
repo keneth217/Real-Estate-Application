@@ -68,12 +68,9 @@ fun LandLordDashboardScreen(
                         onBackClick = { navController.popBackStack() },
                         currentRoute = currentRoute,
                         drawerItems = listOf(
-                            Screen.TenantDashboard,
-                            Screen.SellerDashboard,
-                            Screen.BuyerDashboard,
-                            Screen.GuestDashboard,
+
                             Screen.LandLordDashboard,
-                            Screen.AgentDashboard
+                            Screen.LandLordPropertiesScreen
                         )
                     )
                 }
