@@ -254,5 +254,20 @@ class PropertyRepository(
             throw Exception("Failed to fetch all appointments: ${e.message}")
         }
     }
+    suspend fun getPropertiesByUserId(userId: String): List<Property> {
+        return try {
+            val querySnapshot = firestore.collection("properties")
+                .whereEqualTo("userId", userId)
+                .get()
+                .await()
+            querySnapshot.documents.mapNotNull { document ->
+                document.toObject(Property::class.java)
+            }
+        } catch (e: Exception) {
+            println("Error fetching properties by user ID: ${e.message}")
+            emptyList()
+        }
+    }
+
 
 }
