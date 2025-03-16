@@ -28,6 +28,8 @@ sealed class Screen(
     object LandLordDashboard : Screen("landlord dashboard", "DashBoard")
     object AgentDashboard : Screen("agent dashboard", "DashBoard")
 
+    object LandLordPropertiesScreen : Screen("Landlord properties", "Landlord properties")
+
 
     object AddProperty : Screen("addProperty", "Add Property")
     object Favorites : Screen("favorites", "Favorites")
