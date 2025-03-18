@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -56,9 +57,12 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.keneth.realestateapplication.data.Amenities
+import com.keneth.realestateapplication.data.PROPERTY_PURPOSE
+import com.keneth.realestateapplication.data.RealEstateUserRoles
 import com.keneth.realestateapplication.enum.AddPropertyStep
 import com.keneth.realestateapplication.enum.RegistrationStep
 import com.keneth.realestateapplication.viewModels.AddPropertyViewModel
+import com.keneth.realestateapplication.viewModels.MultiStepFormViewModel
 import com.keneth.realestateapplication.viewModels.PropertyViewModel
 import com.keneth.realestateapplication.viewModels.UserViewModel
 import kotlinx.coroutines.delay
@@ -70,19 +74,21 @@ fun AddPropertyForm(
     propertyViewModel: PropertyViewModel,
     multiStepFormPropertyViewModel: AddPropertyViewModel
 ) {
+
     val currentStep = multiStepFormPropertyViewModel.currentStep
     val isLoading = propertyViewModel.isLoading.value
     val isSuccess = multiStepFormPropertyViewModel.isSuccess
     val errorMessage = multiStepFormPropertyViewModel.errorMessage
 
-    Scaffold(topBar = {
-        Screen.AddProperty.title?.let {
-            AppTopBar(
-                title = it,
-                onMenuClick = { navController.popBackStack() }
-            )
-        }
-    }, containerColor = Color.White, contentColor = Color.Black
+    Scaffold(
+        topBar = {
+            Screen.AddProperty.title?.let {
+                AppTopBar(
+                    title = it,
+                    onMenuClick = { navController.popBackStack() }
+                )
+            }
+        }, containerColor = Color.White, contentColor = Color.Black
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -97,6 +103,7 @@ fun AddPropertyForm(
                     AddPropertyStep.BASIC_DETAILS -> "Step 1: Basic Details"
                     AddPropertyStep.CONTACT_INFO -> "Step 2: Contact Information"
                     AddPropertyStep.ADDRESS -> "Step 3: Address"
+                    AddPropertyStep.PURPOSE -> "Step4 : Choose property purpose"
                     AddPropertyStep.PROPERTY_TYPE -> "Step 4: Property Type"
                     AddPropertyStep.IMAGES -> "Step 5: Images"
                     AddPropertyStep.AMENITIES -> "House amenities"
@@ -113,11 +120,13 @@ fun AddPropertyForm(
             when (currentStep) {
                 AddPropertyStep.BASIC_DETAILS -> BasicDetailsStep(multiStepFormPropertyViewModel)
                 AddPropertyStep.CONTACT_INFO -> ContactInfoStep(multiStepFormPropertyViewModel)
+                AddPropertyStep.PURPOSE -> PropertyPurposeStep(multiStepFormPropertyViewModel)
                 AddPropertyStep.ADDRESS -> AddressStep(multiStepFormPropertyViewModel)
                 AddPropertyStep.PROPERTY_TYPE -> PropertyTypeStep(
                     propertyViewModel = propertyViewModel,
                     addPropertyViewModel = multiStepFormPropertyViewModel
                 )
+
                 AddPropertyStep.IMAGES -> ImagesStep(multiStepFormPropertyViewModel)
                 AddPropertyStep.AMENITIES -> AmenitiesStep(multiStepFormPropertyViewModel)
                 AddPropertyStep.REVIEW -> ReviewStep(
@@ -216,7 +225,8 @@ fun AddPropertyForm(
 fun PropertyProgress(currentStep: AddPropertyStep) {
     val progress = when (currentStep) {
         AddPropertyStep.BASIC_DETAILS -> 0.0f
-        AddPropertyStep.CONTACT_INFO -> 0.3f
+        AddPropertyStep.CONTACT_INFO -> 0.2f
+        AddPropertyStep.PURPOSE ->0.3f
         AddPropertyStep.ADDRESS -> 0.4f
         AddPropertyStep.PROPERTY_TYPE -> 0.5f
         AddPropertyStep.AMENITIES -> 0.6f
@@ -535,6 +545,29 @@ fun PropertyTypeStep(
 }
 
 @Composable
+fun PropertyPurposeStep(viewModel: AddPropertyViewModel) {
+    val selectedPurpose = viewModel.selectedPurpose
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        PROPERTY_PURPOSE.entries.forEach { purpose ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { viewModel.selectPurpose(purpose) }
+                    .padding(8.dp)
+            ) {
+                Checkbox(
+                    checked = selectedPurpose == purpose,
+                    onCheckedChange = { viewModel.selectPurpose(purpose) }
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(text = purpose.name, style = MaterialTheme.typography.bodyLarge)
+            }
+        }
+    }
+}
+@Composable
 fun ImagesStep(viewModel: AddPropertyViewModel) {
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetMultipleContents()
@@ -618,7 +651,6 @@ fun ReviewStep(
         )
     }
 
-    // Display property details for review
     Column(modifier = Modifier.padding(16.dp)) {
         Text("Title: ${viewModel.title}")
         Text("Description: ${viewModel.description}")
@@ -631,6 +663,7 @@ fun ReviewStep(
         Text("Contact Email: ${viewModel.contactInfo.email}")
         Text("Address: ${viewModel.address.street}, ${viewModel.address.city}, ${viewModel.address.state}, ${viewModel.address.postalCode}, ${viewModel.address.country}")
         Text("Property Type: ${viewModel.propertyType.name}")
+        Text("Property Purpose:${viewModel.propertyPurpose.name}")
         Text("Images: ${viewModel.images.size} uploaded")
 
         // Submit button
