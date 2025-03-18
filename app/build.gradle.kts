@@ -44,6 +44,8 @@ android {
 }
 
 dependencies {
+    //itext pdf
+    implementation ("com.itextpdf:itext7-core:7.2.3")
 //icons
     implementation ("androidx.compose.material:material-icons-extended:1.5.4")
     //date picker
