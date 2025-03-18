@@ -44,28 +44,35 @@ fun LoginScreen(
     var message by remember { mutableStateOf<String?>(null) }
     var isSuccess by remember { mutableStateOf(false) }
     val authState = viewModel.authState.value
-
     val profileFontFamily = FontFamily(
         Font(R.font.darkmode_regular_400, weight = FontWeight.Normal),
         Font(R.font.cluisher_brush, weight = FontWeight.Bold)
     )
 
-    // Handling authentication state changes
     LaunchedEffect(authState) {
+        println("AuthState changed: $authState")
         when (authState) {
             is AuthStatus.SuccessWithData -> {
                 val token = authState.user?.get("token").toString()
                 val role = authState.user?.get("userRole").toString()
-                if (token.isNotEmpty() && role.isNotEmpty()) {
+                val cleanedRole = role.replace("[", "").replace("]", "")
+
+                println("Token: $token, Role: $cleanedRole")
+
+                if (token.isNotEmpty() && cleanedRole.isNotEmpty()) {
                     UserPreferences.deleteToken(context)
                     UserPreferences.storeToken(context, token)
                     UserPreferences.deleteUserRole(context)
-                    UserPreferences.storeUserRole(context, role)
-                    message = "Login successful!"
+                    UserPreferences.storeUserRole(context, cleanedRole)
+
+                    message = "Login successful!, Redirecting ....."
                     isSuccess = true
                     showMessage = true
+
+                    println("Login successful! Navigating to $cleanedRole dashboard...")
                     delay(2000)
-                    when (role) {
+
+                    when (cleanedRole) {
                         "ADMIN" -> navController.navigate(Screen.Dashboard.route)
                         "AGENT" -> navController.navigate(Screen.AgentDashboard.route)
                         "BUYER" -> navController.navigate(Screen.BuyerDashboard.route)
@@ -73,12 +80,23 @@ fun LoginScreen(
                         "LANDLORD" -> navController.navigate(Screen.LandLordDashboard.route)
                         "TENANT" -> navController.navigate(Screen.TenantDashboard.route)
                         "GUEST" -> navController.navigate(Screen.GuestDashboard.route)
-                        else -> navController.navigate(Screen.Login.route)
+                        else -> {
+                            UserPreferences.deleteToken(context)
+                            UserPreferences.deleteUserRole(context)
+                            message = "Invalid login details. Please log in again."
+                            isSuccess = false
+                            showMessage = true
+                            println("Invalid role: $cleanedRole")
+                            navController.navigate(Screen.Login.route)
+                        }
                     }
                 } else {
-                    message = "Token or role is empty"
+                    UserPreferences.deleteToken(context)
+                    UserPreferences.deleteUserRole(context)
+                    message = "Invalid Login details. Please log in again."
                     isSuccess = false
                     showMessage = true
+                    println("Token or role is empty")
                 }
             }
 
@@ -86,27 +104,25 @@ fun LoginScreen(
                 message = authState.message
                 isSuccess = false
                 showMessage = true
+                println("Login error: ${authState.message}")
             }
 
-            else -> {}
+            else -> {
+                println("AuthState: $authState")
+            }
         }
     }
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        containerColor = Color.White,
-        contentColor = Color.Black,
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            contentAlignment = Alignment.Center
-        ) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            containerColor = Color.White,
+            contentColor = Color.Black,
+        ) { paddingValues ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp),
+                    .padding(paddingValues),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -122,11 +138,21 @@ fun LoginScreen(
                 )
                 Spacer(modifier = Modifier.height(50.dp))
                 Image(
-                    painter = painterResource(id = R.drawable.img10), // Ensure this drawable exists
+                    painter = painterResource(id = R.drawable.img10),
                     contentDescription = "Splash Image",
                     modifier = Modifier.size(250.dp)
                 )
                 Spacer(modifier = Modifier.height(16.dp))
+
+                // Display the message above the input fields
+                message?.let {
+                    Text(
+                        text = it,
+                        color = if (isSuccess) Color.Green else Color.Red,
+                        modifier = Modifier.padding(8.dp)
+                    )
+                }
+
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
@@ -145,7 +171,10 @@ fun LoginScreen(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(
-                    onClick = { viewModel.login(email, password) },
+                    onClick = {
+                        println("Login button clicked")
+                        viewModel.login(email, password)
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp),
@@ -159,7 +188,7 @@ fun LoginScreen(
                         pressedElevation = 2.dp,
                         hoveredElevation = 8.dp
                     ),
-                    enabled = authState != AuthStatus.Loading // Disable button during loading
+                    enabled = authState != AuthStatus.Loading
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -167,11 +196,11 @@ fun LoginScreen(
                     ) {
                         if (authState == AuthStatus.Loading) {
                             CircularProgressIndicator(
-                                color = Color.White,
+                                color = Color.Green,
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Logging In...")
+                            Text("Logging In...", color = Color.Green)
                         } else {
                             Text("Login")
                         }
@@ -181,58 +210,59 @@ fun LoginScreen(
                 Text(
                     "Don't have an account? Sign up.",
                     modifier = Modifier.clickable {
+                        println("Navigating to SignUp screen")
                         navController.navigate(Screen.SignUp.route)
                     },
                     color = MaterialTheme.colorScheme.primary
                 )
             }
         }
-    }
 
-    // Show message dialog based on authState
-    if (showMessage) {
-        LaunchedEffect(Unit) {
-            delay(5000)
-            showMessage = false
-        }
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.5f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Card(
+        // Show message card on top of the Scaffold
+        if (showMessage) {
+            LaunchedEffect(Unit) {
+                delay(5000)
+                showMessage = false
+                println("Message dialog dismissed")
+            }
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .height(120.dp), // Increased card height
-                shape = RoundedCornerShape(8.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (isSuccess) Color.Green else Color.Red
-                ),
-                elevation = CardDefaults.cardElevation(8.dp)
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.5f)),
+                contentAlignment = Alignment.Center
             ) {
-                Column(
+                Card(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .height(120.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (isSuccess) Color.Green else Color.Red
+                    ),
+                    elevation = CardDefaults.cardElevation(8.dp)
                 ) {
-                    Image(
-                        painter = painterResource(
-                            id = if (isSuccess)
-                                R.drawable.correct else R.drawable.error2 // Ensure these drawables exist
-                        ),
-                        contentDescription = if (isSuccess) "Success Icon" else "Failure Icon",
-                        modifier = Modifier.size(50.dp)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = message ?: "",
-                        color = Color.White,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Image(
+                            painter = painterResource(
+                                id = if (isSuccess) R.drawable.correct else R.drawable.error2
+                            ),
+                            contentDescription = if (isSuccess) "Success Icon" else "Failure Icon",
+                            modifier = Modifier.size(50.dp)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = message ?: "",
+                            color = Color.White,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
             }
         }
